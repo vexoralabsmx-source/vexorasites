@@ -23,6 +23,7 @@ body {
 html { scroll-behavior: smooth; }
 button, a, input, textarea, select { touch-action: manipulation; }
 button, a { cursor: pointer; }
+.editor-a11y button { min-width: 44px; min-height: 44px; }
 ::selection { background: #8b7cff; color: white; }
 .editor-input { min-height: 44px; width: 100%; border-radius: 12px; border: 1px solid rgb(255 255 255 / .08); background: rgb(255 255 255 / .025); padding: 10px 12px; color: white; font-size: 12px; outline: none; }
 .editor-input:focus { border-color: #8b7cff; box-shadow: 0 0 0 2px rgb(139 124 255 / .15); }
@@ -30,4 +31,7 @@ button, a { cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+@media (max-width: 640px) {
+  .vexora-inner-grid { grid-template-columns: minmax(0, 1fr) !important; }
 }

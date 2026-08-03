@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getSite, saveSite } from "@/lib/sites/repository";
+import { listSiteVersions, restoreSiteVersion } from "@/lib/sites/repository";
 import { siteErrorResponse } from "@/lib/sites/http";
-import { siteSchema } from "@/types/site";
 
-const idSchema = z.string().uuid();
-const saveRequestSchema = z.object({
-  schema: siteSchema,
-  createVersion: z.boolean().optional().default(false),
-});
+const uuid = z.string().uuid();
 
 export async function GET(
   _request: Request,
@@ -17,24 +12,23 @@ export async function GET(
   try {
     const { id } = await params;
     return NextResponse.json({
-      schema: await getSite(idSchema.parse(id)),
-      mode: "remote",
+      versions: await listSiteVersions(uuid.parse(id)),
     });
   } catch (error) {
     return siteErrorResponse(error);
   }
 }
 
-export async function PATCH(
+export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const [{ id }, body] = await Promise.all([params, request.json()]);
-    const input = saveRequestSchema.parse(body);
-    return NextResponse.json(
-      await saveSite(idSchema.parse(id), input.schema, input.createVersion),
-    );
+    const versionId = uuid.parse((body as { versionId?: string }).versionId);
+    return NextResponse.json({
+      schema: await restoreSiteVersion(uuid.parse(id), versionId),
+    });
   } catch (error) {
     return siteErrorResponse(error);
   }

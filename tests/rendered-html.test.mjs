@@ -63,7 +63,9 @@ test("incluye las superficies y contratos principales del MVP", async () => {
   assert.match(assetsApi, /createMediaAssetSchema/);
   assert.match(mediaCenter, /createUploadWidget/);
   assert.match(mediaCenter, /Tutorial rápido de Cloudinary/);
-  assert.match(types, /media: z\.array/);
+  assert.match(types, /media:\s*z\s*\.array/);
+  assert.match(types, /"container"/);
+  assert.match(types, /navigation:/);
   assert.match(env, /NEXT_PUBLIC_SUPABASE_URL=/);
   assert.match(env, /NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=/);
   assert.doesNotMatch(env, /CLOUDINARY_API_SECRET\s*=\s*\S+/i);
@@ -74,4 +76,11 @@ test("incluye las superficies y contratos principales del MVP", async () => {
   await access(new URL("../app/pricing/page.tsx", import.meta.url));
   await access(new URL("../app/showcase/page.tsx", import.meta.url));
   await access(new URL("../app/site/[slug]/[page]/page.tsx", import.meta.url));
+  await access(new URL("../components/editor/advanced-editor-tools.tsx", import.meta.url));
+  await access(new URL("../app/api/analytics/route.ts", import.meta.url));
+  await access(new URL("../app/api/monitoring/errors/route.ts", import.meta.url));
+  await access(new URL("../app/privacy/page.tsx", import.meta.url));
+  await access(new URL("../app/terms/page.tsx", import.meta.url));
+  await access(new URL("../app/cookies/page.tsx", import.meta.url));
+  await access(new URL("../supabase/migrations/202608030003_operations.sql", import.meta.url));
 });
