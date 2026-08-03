@@ -10,6 +10,14 @@ import { cn } from "@/lib/utils";
 import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 import type { SiteSchema, SiteSection } from "@/types/site";
 
+const fontVariables = {
+  geist: "var(--font-geist-sans)",
+  manrope: "var(--font-manrope)",
+  "space-grotesk": "var(--font-space-grotesk)",
+  cormorant: "var(--font-cormorant)",
+  "ibm-plex-mono": "var(--font-ibm-plex-mono)",
+} as const;
+
 const registry: Record<
   SiteSection["type"],
   React.ComponentType<{ section: SiteSection }>
@@ -43,17 +51,57 @@ function SectionFrame({
       data-duration={section.animation.duration ?? 1}
       data-delay={section.animation.delay ?? 0}
       data-easing={section.animation.easing ?? "power3.out"}
+      data-intensity={section.animation.intensity}
+      data-scrub={section.animation.scrub ? "true" : "false"}
+      data-start={section.animation.start ?? "top 75%"}
+      data-end={section.animation.end ?? "bottom top"}
+      data-pin={section.animation.pin ? "true" : "false"}
+      data-stagger={section.animation.stagger ?? 0.08}
+      data-hide-mobile={section.responsive.hideMobile ? "true" : "false"}
       className={cn(
         "relative isolate overflow-hidden",
         className,
-        section.responsive.hideMobile && "max-sm:hidden",
+        section.responsive.hideMobile && "vexora-hide-mobile",
       )}
-      style={{
-        background: section.styles.background,
-        color: section.styles.foreground,
-        paddingBlock: `${section.styles.padding}px`,
-        paddingInline: "clamp(24px, 6vw, 96px)",
-      }}
+      style={
+        {
+          background: section.styles.background,
+          color: section.styles.foreground,
+          paddingBlock: `${section.styles.padding}px`,
+          paddingInline: "clamp(20px, 6cqw, 96px)",
+          "--mobile-padding": `${section.responsive.mobilePadding}px`,
+          "--section-heading-font": section.styles.typography?.headingFont
+            ? fontVariables[section.styles.typography.headingFont]
+            : undefined,
+          "--section-body-font": section.styles.typography?.bodyFont
+            ? fontVariables[section.styles.typography.bodyFont]
+            : undefined,
+          "--section-heading-scale":
+            section.styles.typography?.headingScale ?? 1,
+          "--section-body-scale": section.styles.typography?.bodyScale ?? 1,
+          "--section-display-min": section.styles.typography
+            ? `${2.5 * section.styles.typography.headingScale}rem`
+            : undefined,
+          "--section-display-fluid": section.styles.typography
+            ? `${13 * section.styles.typography.headingScale}cqw`
+            : undefined,
+          "--section-display-max": section.styles.typography
+            ? `${7.5 * section.styles.typography.headingScale}rem`
+            : undefined,
+          "--section-title-min": section.styles.typography
+            ? `${2.25 * section.styles.typography.headingScale}rem`
+            : undefined,
+          "--section-title-fluid": section.styles.typography
+            ? `${8 * section.styles.typography.headingScale}cqw`
+            : undefined,
+          "--section-title-max": section.styles.typography
+            ? `${6 * section.styles.typography.headingScale}rem`
+            : undefined,
+          "--section-body-size": `${section.styles.typography?.bodyScale ?? 1}em`,
+          "--section-line-height": section.styles.typography?.lineHeight ?? 1,
+          "--section-letter-spacing": `${section.styles.typography?.letterSpacing ?? 0}em`,
+        } as React.CSSProperties
+      }
     >
       <div
         className="mx-auto"
@@ -112,11 +160,17 @@ function HeroBlock({ section }: { section: SiteSection }) {
         )}
       >
         <Eyebrow section={section} />
-        <h1 className="max-w-5xl text-balance text-[clamp(3.1rem,8vw,7.5rem)] font-semibold leading-[.9] tracking-[-.065em]">
+        <h1
+          data-motion-item
+          className="vexora-display max-w-5xl text-balance font-semibold"
+        >
           {section.content.title}
         </h1>
         {section.content.body && (
-          <p className="mt-8 max-w-2xl text-[clamp(1rem,1.6vw,1.3rem)] leading-relaxed opacity-70">
+          <p
+            data-motion-item
+            className="mt-8 max-w-2xl text-[clamp(1rem,1.6vw,1.3rem)] leading-relaxed opacity-70"
+          >
             {section.content.body}
           </p>
         )}
@@ -142,17 +196,20 @@ function HeroBlock({ section }: { section: SiteSection }) {
 function StoryBlock({ section }: { section: SiteSection }) {
   return (
     <SectionFrame section={section}>
-      <div className="grid gap-14 lg:grid-cols-[.8fr_1.2fr] lg:items-center">
-        <div>
+      <div className="vexora-story-grid grid gap-14">
+        <div data-motion-item>
           <Eyebrow section={section} />
-          <h2 className="text-[clamp(2.5rem,6vw,5.5rem)] font-semibold leading-[.95] tracking-[-.055em]">
+          <h2 className="vexora-section-title font-semibold">
             {section.content.title}
           </h2>
           <p className="mt-7 max-w-lg text-lg leading-relaxed opacity-70">
             {section.content.body}
           </p>
         </div>
-        <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border border-current/10">
+        <div
+          data-motion-item
+          className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border border-current/10"
+        >
           <div
             className="absolute inset-0 opacity-90"
             style={{
@@ -178,17 +235,21 @@ function CardsBlock({ section }: { section: SiteSection }) {
   return (
     <SectionFrame section={section}>
       <Eyebrow section={section} />
-      <h2 className="max-w-4xl text-[clamp(2.4rem,5vw,5rem)] font-semibold leading-[.96] tracking-[-.05em]">
+      <h2
+        data-motion-item
+        className="vexora-section-title max-w-4xl font-semibold"
+      >
         {section.content.title}
       </h2>
       <p className="mt-6 max-w-2xl text-lg opacity-65">
         {section.content.body}
       </p>
-      <div className="mt-14 grid gap-4 md:grid-cols-3">
+      <div className="vexora-card-grid motion-sequence mt-14 grid gap-4">
         {items.map((item, index) => (
           <article
             key={`${item.title}-${index}`}
-            className="group min-h-56 rounded-[1.5rem] border border-current/10 bg-current/[.035] p-7 transition duration-300 hover:-translate-y-1 hover:bg-current/[.07]"
+            data-motion-item
+            className="group min-h-56 min-w-0 rounded-[1.5rem] border border-current/10 bg-current/[.035] p-7 transition duration-300 hover:-translate-y-1 hover:bg-current/[.07]"
           >
             <span className="text-xs tabular-nums opacity-45">
               0{index + 1}
@@ -213,23 +274,24 @@ function GalleryBlock({ section }: { section: SiteSection }) {
     <SectionFrame section={section}>
       <div className={cn(section.styles.align === "center" && "text-center")}>
         <Eyebrow section={section} />
-        <h2 className="text-[clamp(2.8rem,7vw,6rem)] font-semibold leading-[.92] tracking-[-.06em]">
+        <h2 data-motion-item className="vexora-section-title font-semibold">
           {section.content.title}
         </h2>
         <p className="mx-auto mt-6 max-w-xl text-lg opacity-65">
           {section.content.body}
         </p>
       </div>
-      <div className="mt-14 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="vexora-gallery-grid motion-sequence mt-14 grid gap-4">
         {(media.length
           ? media
           : ["18% 22%", "72% 25%", "32% 70%", "78% 76%"]
         ).map((item, index) => (
           <div
             key={typeof item === "string" ? item : item.publicId}
+            data-motion-item
             className={cn(
               "relative overflow-hidden rounded-[1.5rem] border border-current/10 bg-black/10",
-              index % 2 ? "aspect-[3/4]" : "aspect-[4/5] md:mt-14",
+              index % 2 ? "aspect-[3/4]" : "vexora-gallery-offset aspect-[4/5]",
             )}
           >
             {typeof item === "string" ? (
@@ -274,7 +336,10 @@ function QuoteBlock({ section }: { section: SiteSection }) {
     <SectionFrame section={section}>
       <div className="mx-auto max-w-5xl text-center">
         <span className="text-7xl leading-none opacity-20">“</span>
-        <h2 className="text-balance text-[clamp(2.2rem,5vw,4.8rem)] font-medium leading-[1.05] tracking-[-.045em]">
+        <h2
+          data-motion-item
+          className="vexora-section-title text-balance font-medium"
+        >
           {section.content.title}
         </h2>
         <p className="mt-8 text-sm uppercase tracking-[.18em] opacity-55">
@@ -290,14 +355,17 @@ function CtaBlock({ section }: { section: SiteSection }) {
     <SectionFrame section={section}>
       <div
         className={cn(
-          "flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between",
-          section.styles.align === "center" &&
-            "items-center text-center lg:flex-col lg:items-center",
+          "vexora-cta-layout flex flex-col gap-10",
+          section.styles.align === "center" && "items-center text-center",
+          section.styles.align !== "center" && "vexora-cta-split",
         )}
       >
         <div>
           <Eyebrow section={section} />
-          <h2 className="max-w-4xl text-balance text-[clamp(2.8rem,7vw,6.5rem)] font-semibold leading-[.9] tracking-[-.06em]">
+          <h2
+            data-motion-item
+            className="vexora-section-title max-w-4xl text-balance font-semibold"
+          >
             {section.content.title}
           </h2>
           <p className="mt-6 text-lg opacity-65">{section.content.body}</p>
@@ -350,6 +418,7 @@ function InternalBlock({ section }: { section: SiteSection }) {
         {elements.map((element) => (
           <div
             key={element.id}
+            data-motion-item
             className="min-w-0 rounded-3xl border border-current/10 bg-current/[.035] p-6"
           >
             {element.type === "heading" && (
@@ -414,13 +483,116 @@ export function SiteRenderer({
         .forEach((element) => {
           const preset = element.dataset.animate;
           if (preset === "none") return;
+          const target = element.firstElementChild as HTMLElement | null;
+          if (!target) return;
+          const items =
+            target.querySelectorAll<HTMLElement>("[data-motion-item]");
+          const intensity = Number(element.dataset.intensity) || 50;
+          const distance = 24 + intensity * 0.72;
+          const start = element.dataset.start || "top 75%";
+          const end = element.dataset.end || "bottom top";
+          const scrub = element.dataset.scrub === "true" ? 0.8 : false;
+          const pin = element.dataset.pin === "true";
+          const stagger = Number(element.dataset.stagger) || 0.08;
+
+          if (preset === "parallax") {
+            gsap.fromTo(
+              target,
+              { y: -distance * 0.45 },
+              {
+                y: distance * 0.45,
+                ease: "none",
+                scrollTrigger: {
+                  trigger: element,
+                  start: "top bottom",
+                  end: "bottom top",
+                  scrub: 0.8,
+                },
+              },
+            );
+            return;
+          }
+
+          if (preset === "scroll-driven") {
+            gsap.fromTo(
+              items.length ? items : target,
+              { opacity: 0.25, y: distance, scale: 0.96 },
+              {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                ease: "none",
+                stagger,
+                scrollTrigger: { trigger: element, start, end, scrub: 0.8 },
+              },
+            );
+            return;
+          }
+
+          if (preset === "sticky-story") {
+            gsap
+              .timeline({
+                scrollTrigger: {
+                  trigger: element,
+                  start: "top top",
+                  end: end.startsWith("+=") ? end : "+=180%",
+                  scrub: 0.8,
+                  pin: true,
+                  anticipatePin: 1,
+                },
+              })
+              .fromTo(
+                items.length ? items : target,
+                { opacity: 0.18, y: distance, scale: 0.96 },
+                { opacity: 1, y: 0, scale: 1, stagger, ease: "power2.out" },
+              )
+              .to(
+                items.length ? items : target,
+                { y: -distance * 0.35, stagger: stagger * 0.5, ease: "none" },
+                ">0.15",
+              );
+            return;
+          }
+
+          if (preset === "horizontal-journey") {
+            const track = target.querySelector<HTMLElement>(".motion-sequence");
+            if (track && track.scrollWidth > target.clientWidth) {
+              gsap.to(track, {
+                x: () => -(track.scrollWidth - target.clientWidth),
+                ease: "none",
+                scrollTrigger: {
+                  trigger: element,
+                  start: "top top",
+                  end: () => `+=${track.scrollWidth}`,
+                  scrub: 0.8,
+                  pin: true,
+                  invalidateOnRefresh: true,
+                  anticipatePin: 1,
+                },
+              });
+            } else {
+              gsap.fromTo(
+                items.length ? items : target,
+                { x: distance, opacity: 0.25 },
+                {
+                  x: 0,
+                  opacity: 1,
+                  stagger,
+                  ease: "none",
+                  scrollTrigger: { trigger: element, start, end, scrub: 0.8 },
+                },
+              );
+            }
+            return;
+          }
+
           gsap.fromTo(
-            element.children[0],
+            items.length ? items : target,
             {
               opacity: 0,
-              y: preset === "slide-left" ? 0 : 48,
-              x: preset === "slide-left" ? -48 : 0,
-              scale: preset === "zoom-reveal" ? 0.94 : 1,
+              y: preset === "slide-left" ? 0 : distance,
+              x: preset === "slide-left" ? -distance : 0,
+              scale: preset === "zoom-reveal" ? 0.92 : 1,
               filter: preset === "blur-reveal" ? "blur(14px)" : "blur(0px)",
             },
             {
@@ -432,27 +604,57 @@ export function SiteRenderer({
               duration: Number(element.dataset.duration) || 1,
               delay: Number(element.dataset.delay) || 0,
               ease: element.dataset.easing || "power3.out",
-              scrollTrigger: { trigger: element, start: "top 82%", once: true },
+              stagger,
+              scrollTrigger: {
+                trigger: element,
+                start,
+                end,
+                scrub,
+                pin,
+                once: !scrub && !pin,
+              },
             },
           );
         });
+      window.requestAnimationFrame(() => ScrollTrigger.refresh());
     }, root);
     return () => context.revert();
   }, [schema, pageSlug, editable]);
   const navigation = schema.site.navigation;
   const footer = schema.site.footer;
+  const typography = schema.site.theme.typography ?? {
+    headingFont: "geist" as const,
+    bodyFont: "geist" as const,
+    headingScale: 1,
+    bodyScale: 1,
+  };
   return (
     <div
       ref={root}
       className={cn(
-        "min-h-full bg-black",
+        "vexora-site-root min-h-full bg-black",
         editable && "[&_a]:pointer-events-none",
       )}
+      style={
+        {
+          "--site-heading-font": fontVariables[typography.headingFont],
+          "--site-body-font": fontVariables[typography.bodyFont],
+          "--site-heading-scale": typography.headingScale,
+          "--site-body-scale": typography.bodyScale,
+          "--site-display-min": `${2.5 * typography.headingScale}rem`,
+          "--site-display-fluid": `${13 * typography.headingScale}cqw`,
+          "--site-display-max": `${7.5 * typography.headingScale}rem`,
+          "--site-title-min": `${2.25 * typography.headingScale}rem`,
+          "--site-title-fluid": `${8 * typography.headingScale}cqw`,
+          "--site-title-max": `${6 * typography.headingScale}rem`,
+          fontSize: `${typography.bodyScale}rem`,
+        } as React.CSSProperties
+      }
     >
       {navigation?.enabled !== false && (
         <nav
           aria-label="Páginas del sitio"
-          className="sticky top-0 z-40 flex min-h-16 items-center justify-between gap-4 border-b border-white/10 bg-black/80 px-5 text-white backdrop-blur-xl md:px-10"
+          className="vexora-site-nav sticky top-0 z-40 flex min-h-16 items-center justify-between gap-4 border-b border-white/10 bg-black/80 px-5 text-white backdrop-blur-xl"
         >
           <Link
             href={`/site/${schema.site.slug}`}
@@ -523,28 +725,44 @@ export function SiteRenderer({
         );
       })}
       {footer?.enabled !== false && (
-        <footer className="border-t border-white/10 bg-[#09090c] px-6 py-14 text-white md:px-10">
-          <div className="mx-auto flex max-w-6xl flex-col gap-8 md:flex-row md:items-end md:justify-between">
+        <footer
+          className="vexora-site-footer border-t border-current/10 px-6 py-14"
+          style={{
+            background: footer?.background ?? "#09090c",
+            color: footer?.foreground ?? "#ffffff",
+          }}
+        >
+          <div
+            className={cn(
+              "vexora-footer-layout mx-auto flex max-w-6xl flex-col gap-8",
+              footer?.layout === "centered" && "items-center text-center",
+              footer?.layout === "stacked" && "items-start",
+              (!footer?.layout || footer.layout === "split") &&
+                "vexora-footer-split",
+            )}
+          >
             <div>
-              <p className="max-w-xl text-3xl font-semibold tracking-[-.04em]">
+              <p className="vexora-footer-headline max-w-xl font-semibold">
                 {footer?.headline || "Construyamos algo extraordinario."}
               </p>
-              <p className="mt-4 text-sm text-white/40">
+              <p className="mt-4 text-sm opacity-45">
                 © {new Date().getFullYear()}{" "}
                 {navigation?.logoText || schema.site.name}.{" "}
                 {footer?.copyright || "Todos los derechos reservados."}
               </p>
             </div>
-            <div className="flex flex-wrap gap-4 text-sm text-white/55">
-              {schema.pages.map((item) => (
-                <Link
-                  key={item.id}
-                  href={`/site/${schema.site.slug}${item.slug ? `/${item.slug}` : ""}`}
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
+            {footer?.showLinks !== false && (
+              <div className="flex flex-wrap gap-4 text-sm opacity-60">
+                {schema.pages.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/site/${schema.site.slug}${item.slug ? `/${item.slug}` : ""}`}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </footer>
       )}

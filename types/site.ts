@@ -7,6 +7,17 @@ export const animationPresetSchema = z.enum([
   "slide-left",
   "zoom-reveal",
   "parallax",
+  "scroll-driven",
+  "sticky-story",
+  "horizontal-journey",
+]);
+
+export const fontFamilySchema = z.enum([
+  "geist",
+  "manrope",
+  "space-grotesk",
+  "cormorant",
+  "ibm-plex-mono",
 ]);
 
 export const blockTypeSchema = z.enum([
@@ -70,6 +81,16 @@ export const siteSectionSchema = z.object({
     accent: z.string(),
     align: z.enum(["left", "center"]),
     padding: z.number().min(32).max(192),
+    typography: z
+      .object({
+        headingFont: fontFamilySchema.optional(),
+        bodyFont: fontFamilySchema.optional(),
+        headingScale: z.number().min(0.65).max(1.35).default(1),
+        bodyScale: z.number().min(0.8).max(1.25).default(1),
+        lineHeight: z.number().min(0.8).max(1.5).default(1),
+        letterSpacing: z.number().min(-0.08).max(0.08).default(0),
+      })
+      .optional(),
   }),
   responsive: z.object({
     hideMobile: z.boolean().default(false),
@@ -84,6 +105,10 @@ export const siteSectionSchema = z.object({
     easing: z
       .enum(["power2.out", "power3.out", "back.out", "expo.out"])
       .optional(),
+    start: z.enum(["top 90%", "top 75%", "top 60%", "top top"]).optional(),
+    end: z.enum(["bottom 20%", "bottom top", "+=100%", "+=180%"]).optional(),
+    pin: z.boolean().optional(),
+    stagger: z.number().min(0).max(0.3).optional(),
   }),
   locked: z.boolean().default(false),
 });
@@ -103,6 +128,14 @@ export const siteSchema = z.object({
         accent: z.string(),
       }),
       radius: z.number(),
+      typography: z
+        .object({
+          headingFont: fontFamilySchema.default("geist"),
+          bodyFont: fontFamilySchema.default("geist"),
+          headingScale: z.number().min(0.75).max(1.25).default(1),
+          bodyScale: z.number().min(0.85).max(1.2).default(1),
+        })
+        .optional(),
     }),
     navigation: z
       .object({
@@ -117,6 +150,10 @@ export const siteSchema = z.object({
         enabled: z.boolean().default(true),
         headline: z.string().default("Construyamos algo extraordinario."),
         copyright: z.string().default("Todos los derechos reservados."),
+        showLinks: z.boolean().default(true),
+        layout: z.enum(["split", "stacked", "centered"]).default("split"),
+        background: z.string().default("#09090c"),
+        foreground: z.string().default("#ffffff"),
       })
       .optional(),
   }),

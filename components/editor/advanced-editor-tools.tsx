@@ -25,6 +25,13 @@ import { makeId } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 type Tab = "history" | "structure" | "shell" | "motion" | "backup";
+const fontOptions = [
+  ["geist", "Geist · limpia"],
+  ["manrope", "Manrope · editorial"],
+  ["space-grotesk", "Space Grotesk · tecnológica"],
+  ["cormorant", "Cormorant · lujo"],
+  ["ibm-plex-mono", "IBM Plex Mono · técnica"],
+] as const;
 type RemoteVersion = {
   id: string;
   label: string;
@@ -160,6 +167,16 @@ export function AdvancedEditorTools({
     enabled: true,
     headline: "Construyamos algo extraordinario.",
     copyright: "Todos los derechos reservados.",
+    showLinks: true,
+    layout: "split" as const,
+    background: "#09090c",
+    foreground: "#ffffff",
+  };
+  const siteTypography = schema.site.theme.typography ?? {
+    headingFont: "geist" as const,
+    bodyFont: "geist" as const,
+    headingScale: 1,
+    bodyScale: 1,
   };
   return (
     <>
@@ -449,9 +466,80 @@ export function AdvancedEditorTools({
               {tab === "shell" && (
                 <section>
                   <PanelTitle
-                    title="Encabezado, navegación y footer"
-                    text="Configura la identidad y los enlaces que aparecen en todas las páginas."
+                    title="Identidad, navegación y footer"
+                    text="Configura tipografía, encabezado y pie de página para todo el sitio."
                   />
+                  <p className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+                    Tipografía global
+                  </p>
+                  <FieldSelect
+                    label="Fuente de títulos"
+                    value={siteTypography.headingFont}
+                    options={[...fontOptions]}
+                    onChange={(headingFont) =>
+                      updateSite({
+                        theme: {
+                          ...schema.site.theme,
+                          typography: {
+                            ...siteTypography,
+                            headingFont:
+                              headingFont as typeof siteTypography.headingFont,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <FieldSelect
+                    label="Fuente de textos"
+                    value={siteTypography.bodyFont}
+                    options={[...fontOptions]}
+                    onChange={(bodyFont) =>
+                      updateSite({
+                        theme: {
+                          ...schema.site.theme,
+                          typography: {
+                            ...siteTypography,
+                            bodyFont:
+                              bodyFont as typeof siteTypography.bodyFont,
+                          },
+                        },
+                      })
+                    }
+                  />
+                  <Range
+                    label={`Escala de títulos · ${Math.round(siteTypography.headingScale * 100)}%`}
+                    min={0.75}
+                    max={1.25}
+                    step={0.05}
+                    value={siteTypography.headingScale}
+                    onChange={(headingScale) =>
+                      updateSite({
+                        theme: {
+                          ...schema.site.theme,
+                          typography: { ...siteTypography, headingScale },
+                        },
+                      })
+                    }
+                  />
+                  <Range
+                    label={`Escala de textos · ${Math.round(siteTypography.bodyScale * 100)}%`}
+                    min={0.85}
+                    max={1.2}
+                    step={0.05}
+                    value={siteTypography.bodyScale}
+                    onChange={(bodyScale) =>
+                      updateSite({
+                        theme: {
+                          ...schema.site.theme,
+                          typography: { ...siteTypography, bodyScale },
+                        },
+                      })
+                    }
+                  />
+                  <div className="my-6 border-t border-white/10" />
+                  <p className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+                    Encabezado
+                  </p>
                   <Toggle
                     label="Mostrar encabezado"
                     checked={nav.enabled}
@@ -488,6 +576,30 @@ export function AdvancedEditorTools({
                       updateSite({ footer: { ...footer, enabled } })
                     }
                   />
+                  <Toggle
+                    label="Mostrar enlaces de navegación"
+                    checked={footer.showLinks}
+                    onChange={(showLinks) =>
+                      updateSite({ footer: { ...footer, showLinks } })
+                    }
+                  />
+                  <FieldSelect
+                    label="Composición del footer"
+                    value={footer.layout}
+                    options={[
+                      ["split", "Dos columnas"],
+                      ["stacked", "Apilado"],
+                      ["centered", "Centrado"],
+                    ]}
+                    onChange={(layout) =>
+                      updateSite({
+                        footer: {
+                          ...footer,
+                          layout: layout as typeof footer.layout,
+                        },
+                      })
+                    }
+                  />
                   <Field
                     label="Frase del footer"
                     value={footer.headline}
@@ -502,13 +614,27 @@ export function AdvancedEditorTools({
                       updateSite({ footer: { ...footer, copyright } })
                     }
                   />
+                  <Field
+                    label="Color de fondo"
+                    value={footer.background}
+                    onChange={(background) =>
+                      updateSite({ footer: { ...footer, background } })
+                    }
+                  />
+                  <Field
+                    label="Color de texto"
+                    value={footer.foreground}
+                    onChange={(foreground) =>
+                      updateSite({ footer: { ...footer, foreground } })
+                    }
+                  />
                 </section>
               )}
               {tab === "motion" && (
                 <section>
                   <PanelTitle
                     title="Motion Composer"
-                    text="Compón la entrada del bloque seleccionado y pruébala en una vista navegable real."
+                    text="Crea parallax, storytelling fijado y secuencias controladas por el scroll con ScrollTrigger."
                   />
                   {selected ? (
                     <div className="space-y-5">
@@ -522,6 +648,9 @@ export function AdvancedEditorTools({
                           ["slide-left", "Desde la izquierda"],
                           ["zoom-reveal", "Zoom sutil"],
                           ["parallax", "Parallax"],
+                          ["scroll-driven", "Scroll driven"],
+                          ["sticky-story", "Storytelling fijado"],
+                          ["horizontal-journey", "Journey horizontal"],
                         ]}
                         onChange={(preset) =>
                           update(selected.id, {
@@ -530,6 +659,87 @@ export function AdvancedEditorTools({
                               preset:
                                 preset as SiteSection["animation"]["preset"],
                             },
+                          })
+                        }
+                      />
+                      <Range
+                        label={`Intensidad · ${selected.animation.intensity}%`}
+                        min={0}
+                        max={100}
+                        value={selected.animation.intensity}
+                        onChange={(intensity) =>
+                          update(selected.id, {
+                            animation: { ...selected.animation, intensity },
+                          })
+                        }
+                      />
+                      <Range
+                        label={`Secuencia · ${Math.round((selected.animation.stagger ?? 0.08) * 100) / 100}s`}
+                        min={0}
+                        max={0.3}
+                        step={0.01}
+                        value={selected.animation.stagger ?? 0.08}
+                        onChange={(stagger) =>
+                          update(selected.id, {
+                            animation: { ...selected.animation, stagger },
+                          })
+                        }
+                      />
+                      <FieldSelect
+                        label="Inicio del efecto"
+                        value={selected.animation.start ?? "top 75%"}
+                        options={[
+                          ["top 90%", "Al entrar en pantalla"],
+                          ["top 75%", "Entrada natural"],
+                          ["top 60%", "Entrada tardía"],
+                          ["top top", "Al tocar el borde superior"],
+                        ]}
+                        onChange={(start) =>
+                          update(selected.id, {
+                            animation: {
+                              ...selected.animation,
+                              start: start as NonNullable<
+                                SiteSection["animation"]["start"]
+                              >,
+                            },
+                          })
+                        }
+                      />
+                      <FieldSelect
+                        label="Final del efecto"
+                        value={selected.animation.end ?? "bottom top"}
+                        options={[
+                          ["bottom 20%", "Antes de salir"],
+                          ["bottom top", "Al salir"],
+                          ["+=100%", "Una pantalla"],
+                          ["+=180%", "Storytelling largo"],
+                        ]}
+                        onChange={(end) =>
+                          update(selected.id, {
+                            animation: {
+                              ...selected.animation,
+                              end: end as NonNullable<
+                                SiteSection["animation"]["end"]
+                              >,
+                            },
+                          })
+                        }
+                      />
+                      <Toggle
+                        label="Controlar progreso con scroll"
+                        checked={selected.animation.scrub}
+                        onChange={(scrub) =>
+                          update(selected.id, {
+                            animation: { ...selected.animation, scrub },
+                          })
+                        }
+                      />
+                      <Toggle
+                        label="Fijar bloque durante el efecto"
+                        checked={selected.animation.pin ?? false}
+                        onChange={(pin) =>
+                          update(selected.id, {
+                            animation: { ...selected.animation, pin },
                           })
                         }
                       />

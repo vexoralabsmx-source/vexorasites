@@ -62,6 +62,8 @@ import { useEditorStore } from "@/stores/editor-store";
 import type { AnimationPreset, SiteSection } from "@/types/site";
 import { AdvancedEditorTools } from "@/components/editor/advanced-editor-tools";
 
+type SectionTypography = NonNullable<SiteSection["styles"]["typography"]>;
+
 const blockLabels: Record<SiteSection["type"], string> = {
   hero: "Hero cinematográfico",
   story: "Storytelling sticky",
@@ -81,7 +83,17 @@ const presets: { value: AnimationPreset; label: string }[] = [
   { value: "slide-left", label: "Slide left" },
   { value: "zoom-reveal", label: "Zoom reveal" },
   { value: "parallax", label: "Parallax slow" },
+  { value: "scroll-driven", label: "Scroll driven" },
+  { value: "sticky-story", label: "Storytelling fijado" },
+  { value: "horizontal-journey", label: "Journey horizontal" },
 ];
+const fontOptions = [
+  ["geist", "Geist · neutral"],
+  ["manrope", "Manrope · premium"],
+  ["space-grotesk", "Space Grotesk · editorial"],
+  ["cormorant", "Cormorant · lujo"],
+  ["ibm-plex-mono", "IBM Plex Mono · técnica"],
+] as const;
 
 function SortableLayer({
   section,
@@ -343,6 +355,14 @@ export function EditorShell({ projectId }: { projectId: string }) {
     () => currentPage?.sections.find((s) => s.id === selectedId) ?? null,
     [currentPage, selectedId],
   );
+  const selectedTypography = selected?.styles.typography ?? {
+    headingFont: undefined,
+    bodyFont: undefined,
+    headingScale: 1,
+    bodyScale: 1,
+    lineHeight: 1,
+    letterSpacing: 0,
+  };
   const width =
     device === "desktop" ? "100%" : device === "tablet" ? "768px" : "390px";
   const dragEnd = (event: DragEndEvent) => {
@@ -834,6 +854,153 @@ export function EditorShell({ projectId }: { projectId: string }) {
                         ))}
                       </div>
                     </Field>
+                    <div className="border-t border-white/10 pt-4">
+                      <p className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+                        Tipografía del bloque
+                      </p>
+                      <Field label="Fuente de títulos">
+                        <select
+                          value={selectedTypography.headingFont ?? ""}
+                          onChange={(e) =>
+                            update(selected.id, {
+                              styles: {
+                                ...selected.styles,
+                                typography: {
+                                  ...selectedTypography,
+                                  headingFont: (e.target.value ||
+                                    undefined) as SectionTypography["headingFont"],
+                                },
+                              },
+                            })
+                          }
+                          className="editor-input"
+                        >
+                          <option value="">Usar fuente global</option>
+                          {fontOptions.map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Fuente de textos">
+                        <select
+                          value={selectedTypography.bodyFont ?? ""}
+                          onChange={(e) =>
+                            update(selected.id, {
+                              styles: {
+                                ...selected.styles,
+                                typography: {
+                                  ...selectedTypography,
+                                  bodyFont: (e.target.value ||
+                                    undefined) as SectionTypography["bodyFont"],
+                                },
+                              },
+                            })
+                          }
+                          className="editor-input"
+                        >
+                          <option value="">Usar fuente global</option>
+                          {fontOptions.map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field
+                        label={`Escala de títulos · ${Math.round(selectedTypography.headingScale * 100)}%`}
+                      >
+                        <input
+                          type="range"
+                          min="0.65"
+                          max="1.35"
+                          step="0.05"
+                          value={selectedTypography.headingScale}
+                          onChange={(e) =>
+                            update(selected.id, {
+                              styles: {
+                                ...selected.styles,
+                                typography: {
+                                  ...selectedTypography,
+                                  headingScale: Number(e.target.value),
+                                },
+                              },
+                            })
+                          }
+                          className="w-full accent-violet-500"
+                        />
+                      </Field>
+                      <Field
+                        label={`Escala de textos · ${Math.round(selectedTypography.bodyScale * 100)}%`}
+                      >
+                        <input
+                          type="range"
+                          min="0.8"
+                          max="1.25"
+                          step="0.05"
+                          value={selectedTypography.bodyScale}
+                          onChange={(e) =>
+                            update(selected.id, {
+                              styles: {
+                                ...selected.styles,
+                                typography: {
+                                  ...selectedTypography,
+                                  bodyScale: Number(e.target.value),
+                                },
+                              },
+                            })
+                          }
+                          className="w-full accent-violet-500"
+                        />
+                      </Field>
+                      <Field
+                        label={`Altura de línea · ${selectedTypography.lineHeight.toFixed(2)}`}
+                      >
+                        <input
+                          type="range"
+                          min="0.8"
+                          max="1.5"
+                          step="0.05"
+                          value={selectedTypography.lineHeight}
+                          onChange={(e) =>
+                            update(selected.id, {
+                              styles: {
+                                ...selected.styles,
+                                typography: {
+                                  ...selectedTypography,
+                                  lineHeight: Number(e.target.value),
+                                },
+                              },
+                            })
+                          }
+                          className="w-full accent-violet-500"
+                        />
+                      </Field>
+                      <Field
+                        label={`Espaciado de letras · ${selectedTypography.letterSpacing.toFixed(2)}em`}
+                      >
+                        <input
+                          type="range"
+                          min="-0.08"
+                          max="0.08"
+                          step="0.01"
+                          value={selectedTypography.letterSpacing}
+                          onChange={(e) =>
+                            update(selected.id, {
+                              styles: {
+                                ...selected.styles,
+                                typography: {
+                                  ...selectedTypography,
+                                  letterSpacing: Number(e.target.value),
+                                },
+                              },
+                            })
+                          }
+                          className="w-full accent-violet-500"
+                        />
+                      </Field>
+                    </div>
                   </>
                 )}
                 {rightTab === "animation" && (
