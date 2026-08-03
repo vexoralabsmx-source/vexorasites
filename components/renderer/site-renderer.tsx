@@ -1,22 +1,104 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowUpRight, MoveRight } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpRight,
+  Copy,
+  GripVertical,
+  MoveRight,
+  Trash2,
+} from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { optimizeCloudinaryImage } from "@/lib/cloudinary";
 import type { SiteSchema, SiteSection } from "@/types/site";
 
 const fontVariables = {
-  geist: "var(--font-geist-sans)",
-  manrope: "var(--font-manrope)",
-  "space-grotesk": "var(--font-space-grotesk)",
-  cormorant: "var(--font-cormorant)",
-  "ibm-plex-mono": "var(--font-ibm-plex-mono)",
+  geist: "var(--font-geist-sans), Geist, sans-serif",
+  manrope: "var(--font-manrope), Manrope, sans-serif",
+  "space-grotesk": "var(--font-space-grotesk), 'Space Grotesk', sans-serif",
+  cormorant: "var(--font-cormorant), 'Cormorant Garamond', Georgia, serif",
+  "ibm-plex-mono":
+    "var(--font-ibm-plex-mono), 'IBM Plex Mono', ui-monospace, monospace",
 } as const;
+
+type ContentPatch = Partial<SiteSection["content"]>;
+type RendererEditing = {
+  editable: boolean;
+  selectedId?: string | null;
+  onSelect?: (id: string) => void;
+  onContentChange?: (id: string, patch: ContentPatch) => void;
+};
+
+const EditingContext = createContext<RendererEditing>({ editable: false });
+
+function EditableText({
+  section,
+  field,
+  as: Tag,
+  className,
+  style,
+  singleLine = false,
+  motionItem = false,
+  value: customValue,
+  makePatch,
+  children,
+}: {
+  section: SiteSection;
+  field: "eyebrow" | "title" | "body" | "cta";
+  as: "h1" | "h2" | "h3" | "p" | "span";
+  className?: string;
+  style?: React.CSSProperties;
+  singleLine?: boolean;
+  motionItem?: boolean;
+  value?: string;
+  makePatch?: (value: string) => ContentPatch;
+  children?: React.ReactNode;
+}) {
+  const editing = useContext(EditingContext);
+  const value = customValue ?? section.content[field] ?? "";
+  return (
+    <Tag
+      data-inline-edit={editing.editable ? field : undefined}
+      data-motion-item={motionItem ? "" : undefined}
+      contentEditable={editing.editable}
+      suppressContentEditableWarning
+      spellCheck={editing.editable}
+      className={cn(className, editing.editable && "vexora-inline-edit")}
+      style={style}
+      onClick={(event) => {
+        if (!editing.editable) return;
+        event.stopPropagation();
+        editing.onSelect?.(section.id);
+      }}
+      onFocus={() => editing.onSelect?.(section.id)}
+      onBlur={(event) => {
+        if (!editing.editable) return;
+        const text = event.currentTarget.innerText.trim();
+        if (text !== value)
+          editing.onContentChange?.(
+            section.id,
+            makePatch ? makePatch(text) : { [field]: text },
+          );
+      }}
+      onKeyDown={(event) => {
+        if (!editing.editable) return;
+        event.stopPropagation();
+        if (event.key === "Escape" || (singleLine && event.key === "Enter")) {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+      }}
+    >
+      {children ?? value}
+    </Tag>
+  );
+}
 
 const registry: Record<
   SiteSection["type"],
@@ -141,12 +223,14 @@ function ActionLink({
 
 function Eyebrow({ section }: { section: SiteSection }) {
   return section.content.eyebrow ? (
-    <p
+    <EditableText
+      section={section}
+      field="eyebrow"
+      as="p"
+      singleLine
       className="mb-5 text-xs font-semibold uppercase tracking-[.22em]"
       style={{ color: section.styles.accent }}
-    >
-      {section.content.eyebrow}
-    </p>
+    />
   ) : null;
 }
 
@@ -160,19 +244,21 @@ function HeroBlock({ section }: { section: SiteSection }) {
         )}
       >
         <Eyebrow section={section} />
-        <h1
-          data-motion-item
+        <EditableText
+          section={section}
+          field="title"
+          as="h1"
+          singleLine
+          motionItem
           className="vexora-display max-w-5xl text-balance font-semibold"
-        >
-          {section.content.title}
-        </h1>
+        />
         {section.content.body && (
-          <p
-            data-motion-item
+          <EditableText
+            section={section}
+            field="body"
+            as="p"
             className="mt-8 max-w-2xl text-[clamp(1rem,1.6vw,1.3rem)] leading-relaxed opacity-70"
-          >
-            {section.content.body}
-          </p>
+          />
         )}
         {section.content.cta && (
           <ActionLink
@@ -199,12 +285,19 @@ function StoryBlock({ section }: { section: SiteSection }) {
       <div className="vexora-story-grid grid gap-14">
         <div data-motion-item>
           <Eyebrow section={section} />
-          <h2 className="vexora-section-title font-semibold">
-            {section.content.title}
-          </h2>
-          <p className="mt-7 max-w-lg text-lg leading-relaxed opacity-70">
-            {section.content.body}
-          </p>
+          <EditableText
+            section={section}
+            field="title"
+            as="h2"
+            singleLine
+            className="vexora-section-title font-semibold"
+          />
+          <EditableText
+            section={section}
+            field="body"
+            as="p"
+            className="mt-7 max-w-lg text-lg leading-relaxed opacity-70"
+          />
         </div>
         <div
           data-motion-item
@@ -235,15 +328,19 @@ function CardsBlock({ section }: { section: SiteSection }) {
   return (
     <SectionFrame section={section}>
       <Eyebrow section={section} />
-      <h2
-        data-motion-item
+      <EditableText
+        section={section}
+        field="title"
+        as="h2"
+        singleLine
         className="vexora-section-title max-w-4xl font-semibold"
-      >
-        {section.content.title}
-      </h2>
-      <p className="mt-6 max-w-2xl text-lg opacity-65">
-        {section.content.body}
-      </p>
+      />
+      <EditableText
+        section={section}
+        field="body"
+        as="p"
+        className="mt-6 max-w-2xl text-lg opacity-65"
+      />
       <div className="vexora-card-grid motion-sequence mt-14 grid gap-4">
         {items.map((item, index) => (
           <article
@@ -254,13 +351,32 @@ function CardsBlock({ section }: { section: SiteSection }) {
             <span className="text-xs tabular-nums opacity-45">
               0{index + 1}
             </span>
-            <h3
+            <EditableText
+              section={section}
+              field="title"
+              as="h3"
+              singleLine
+              value={item.title}
+              makePatch={(title) => ({
+                items: items.map((current, itemIndex) =>
+                  itemIndex === index ? { ...current, title } : current,
+                ),
+              })}
               className="mt-16 text-3xl font-semibold tracking-[-.04em]"
               style={{ color: section.styles.accent }}
-            >
-              {item.title}
-            </h3>
-            <p className="mt-3 opacity-65">{item.text}</p>
+            />
+            <EditableText
+              section={section}
+              field="body"
+              as="p"
+              value={item.text}
+              makePatch={(text) => ({
+                items: items.map((current, itemIndex) =>
+                  itemIndex === index ? { ...current, text } : current,
+                ),
+              })}
+              className="mt-3 opacity-65"
+            />
           </article>
         ))}
       </div>
@@ -274,12 +390,19 @@ function GalleryBlock({ section }: { section: SiteSection }) {
     <SectionFrame section={section}>
       <div className={cn(section.styles.align === "center" && "text-center")}>
         <Eyebrow section={section} />
-        <h2 data-motion-item className="vexora-section-title font-semibold">
-          {section.content.title}
-        </h2>
-        <p className="mx-auto mt-6 max-w-xl text-lg opacity-65">
-          {section.content.body}
-        </p>
+        <EditableText
+          section={section}
+          field="title"
+          as="h2"
+          singleLine
+          className="vexora-section-title font-semibold"
+        />
+        <EditableText
+          section={section}
+          field="body"
+          as="p"
+          className="mx-auto mt-6 max-w-xl text-lg opacity-65"
+        />
       </div>
       <div className="vexora-gallery-grid motion-sequence mt-14 grid gap-4">
         {(media.length
@@ -336,15 +459,19 @@ function QuoteBlock({ section }: { section: SiteSection }) {
     <SectionFrame section={section}>
       <div className="mx-auto max-w-5xl text-center">
         <span className="text-7xl leading-none opacity-20">“</span>
-        <h2
-          data-motion-item
+        <EditableText
+          section={section}
+          field="title"
+          as="h2"
+          singleLine
           className="vexora-section-title text-balance font-medium"
-        >
-          {section.content.title}
-        </h2>
-        <p className="mt-8 text-sm uppercase tracking-[.18em] opacity-55">
-          {section.content.body}
-        </p>
+        />
+        <EditableText
+          section={section}
+          field="body"
+          as="p"
+          className="mt-8 text-sm uppercase tracking-[.18em] opacity-55"
+        />
       </div>
     </SectionFrame>
   );
@@ -362,13 +489,19 @@ function CtaBlock({ section }: { section: SiteSection }) {
       >
         <div>
           <Eyebrow section={section} />
-          <h2
-            data-motion-item
+          <EditableText
+            section={section}
+            field="title"
+            as="h2"
+            singleLine
             className="vexora-section-title max-w-4xl text-balance font-semibold"
-          >
-            {section.content.title}
-          </h2>
-          <p className="mt-6 text-lg opacity-65">{section.content.body}</p>
+          />
+          <EditableText
+            section={section}
+            field="body"
+            as="p"
+            className="mt-6 text-lg opacity-65"
+          />
         </div>
         <a
           href={section.content.ctaHref || "#"}
@@ -377,7 +510,9 @@ function CtaBlock({ section }: { section: SiteSection }) {
             { "--cta-bg": section.styles.background } as React.CSSProperties
           }
         >
-          {section.content.cta ?? "Hablemos"}
+          <EditableText section={section} field="cta" as="span" singleLine>
+            {section.content.cta ?? "Hablemos"}
+          </EditableText>
           <MoveRight />
         </a>
       </div>
@@ -459,14 +594,28 @@ export function SiteRenderer({
   editable = false,
   selectedId,
   onSelect,
+  onContentChange,
+  onReorder,
+  onMove,
+  onDuplicate,
+  onRemove,
+  onSiteChange,
 }: {
   schema: SiteSchema;
   pageSlug?: string;
   editable?: boolean;
   selectedId?: string | null;
   onSelect?: (id: string) => void;
+  onContentChange?: (id: string, patch: ContentPatch) => void;
+  onReorder?: (activeId: string, overId: string) => void;
+  onMove?: (id: string, direction: -1 | 1) => void;
+  onDuplicate?: (id: string) => void;
+  onRemove?: (id: string) => void;
+  onSiteChange?: (patch: Partial<SiteSchema["site"]>) => void;
 }) {
   const root = useRef<HTMLDivElement>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const page =
     schema.pages.find((item) => item.slug === pageSlug) ?? schema.pages[0];
   useEffect(() => {
@@ -622,6 +771,15 @@ export function SiteRenderer({
   }, [schema, pageSlug, editable]);
   const navigation = schema.site.navigation;
   const footer = schema.site.footer;
+  const footerSettings = footer ?? {
+    enabled: true,
+    headline: "Construyamos algo extraordinario.",
+    copyright: "Todos los derechos reservados.",
+    showLinks: true,
+    layout: "split" as const,
+    background: "#09090c",
+    foreground: "#ffffff",
+  };
   const typography = schema.site.theme.typography ?? {
     headingFont: "geist" as const,
     bodyFont: "geist" as const,
@@ -629,143 +787,265 @@ export function SiteRenderer({
     bodyScale: 1,
   };
   return (
-    <div
-      ref={root}
-      className={cn(
-        "vexora-site-root min-h-full bg-black",
-        editable && "[&_a]:pointer-events-none",
-      )}
-      style={
-        {
-          "--site-heading-font": fontVariables[typography.headingFont],
-          "--site-body-font": fontVariables[typography.bodyFont],
-          "--site-heading-scale": typography.headingScale,
-          "--site-body-scale": typography.bodyScale,
-          "--site-display-min": `${2.5 * typography.headingScale}rem`,
-          "--site-display-fluid": `${13 * typography.headingScale}cqw`,
-          "--site-display-max": `${7.5 * typography.headingScale}rem`,
-          "--site-title-min": `${2.25 * typography.headingScale}rem`,
-          "--site-title-fluid": `${8 * typography.headingScale}cqw`,
-          "--site-title-max": `${6 * typography.headingScale}rem`,
-          fontSize: `${typography.bodyScale}rem`,
-        } as React.CSSProperties
-      }
+    <EditingContext.Provider
+      value={{ editable, selectedId, onSelect, onContentChange }}
     >
-      {navigation?.enabled !== false && (
-        <nav
-          aria-label="Páginas del sitio"
-          className="vexora-site-nav sticky top-0 z-40 flex min-h-16 items-center justify-between gap-4 border-b border-white/10 bg-black/80 px-5 text-white backdrop-blur-xl"
-        >
-          <Link
-            href={`/site/${schema.site.slug}`}
-            className="shrink-0 font-semibold tracking-[-.03em]"
+      <div
+        ref={root}
+        className={cn(
+          "vexora-site-root min-h-full bg-black",
+          editable && "[&_a]:pointer-events-none",
+        )}
+        style={
+          {
+            "--site-heading-font": fontVariables[typography.headingFont],
+            "--site-body-font": fontVariables[typography.bodyFont],
+            "--site-heading-scale": typography.headingScale,
+            "--site-body-scale": typography.bodyScale,
+            "--site-display-min": `${2.5 * typography.headingScale}rem`,
+            "--site-display-fluid": `${13 * typography.headingScale}cqw`,
+            "--site-display-max": `${7.5 * typography.headingScale}rem`,
+            "--site-title-min": `${2.25 * typography.headingScale}rem`,
+            "--site-title-fluid": `${8 * typography.headingScale}cqw`,
+            "--site-title-max": `${6 * typography.headingScale}rem`,
+            fontSize: `${typography.bodyScale}rem`,
+          } as React.CSSProperties
+        }
+      >
+        {navigation?.enabled !== false && (
+          <nav
+            aria-label="Páginas del sitio"
+            className="vexora-site-nav sticky top-0 z-40 flex min-h-16 items-center justify-between gap-4 border-b border-white/10 bg-black/80 px-5 text-white backdrop-blur-xl"
           >
-            {navigation?.logoText || schema.site.name}
-          </Link>
-          <div className="flex items-center gap-1 overflow-x-auto">
-            {schema.pages.map((item) => (
-              <Link
-                key={item.id}
-                href={`/site/${schema.site.slug}${item.slug ? `/${item.slug}` : ""}`}
-                className={cn(
-                  "inline-flex min-h-10 shrink-0 items-center rounded-full px-3 text-xs font-medium",
-                  item.id === page.id
-                    ? "bg-white text-black"
-                    : "text-white/55 hover:bg-white/10 hover:text-white",
-                )}
-              >
-                {item.name}
-              </Link>
-            ))}
-            {navigation?.ctaLabel && (
-              <a
-                href={navigation.ctaHref || "#"}
-                className="inline-flex min-h-10 shrink-0 items-center rounded-full bg-violet-500 px-4 text-xs font-semibold text-white"
-              >
-                {navigation.ctaLabel}
-              </a>
-            )}
-          </div>
-        </nav>
-      )}
-      {page?.sections.map((section) => {
-        const Block = registry[section.type] ?? StoryBlock;
-        return (
-          <div
-            key={section.id}
-            role={editable ? "button" : undefined}
-            tabIndex={editable ? 0 : undefined}
-            aria-label={
-              editable
-                ? `Seleccionar sección ${section.content.title}`
-                : undefined
-            }
-            onClick={(event) => {
-              if (!editable) return;
-              event.stopPropagation();
-              onSelect?.(section.id);
-            }}
-            onKeyDown={(event) => {
-              if (editable && (event.key === "Enter" || event.key === " "))
-                onSelect?.(section.id);
-            }}
-            className={cn(
-              editable &&
-                "relative cursor-pointer outline-none ring-inset transition",
-              selectedId === section.id && "z-10 ring-2 ring-violet-400",
-            )}
-          >
-            <Block section={section} />
-            {editable && selectedId === section.id && (
-              <span className="absolute left-3 top-3 z-20 rounded-md bg-violet-500 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white shadow-lg">
-                {section.type}
-              </span>
-            )}
-          </div>
-        );
-      })}
-      {footer?.enabled !== false && (
-        <footer
-          className="vexora-site-footer border-t border-current/10 px-6 py-14"
-          style={{
-            background: footer?.background ?? "#09090c",
-            color: footer?.foreground ?? "#ffffff",
-          }}
-        >
-          <div
-            className={cn(
-              "vexora-footer-layout mx-auto flex max-w-6xl flex-col gap-8",
-              footer?.layout === "centered" && "items-center text-center",
-              footer?.layout === "stacked" && "items-start",
-              (!footer?.layout || footer.layout === "split") &&
-                "vexora-footer-split",
-            )}
-          >
-            <div>
-              <p className="vexora-footer-headline max-w-xl font-semibold">
-                {footer?.headline || "Construyamos algo extraordinario."}
-              </p>
-              <p className="mt-4 text-sm opacity-45">
-                © {new Date().getFullYear()}{" "}
-                {navigation?.logoText || schema.site.name}.{" "}
-                {footer?.copyright || "Todos los derechos reservados."}
-              </p>
+            <Link
+              href={`/site/${schema.site.slug}`}
+              className="shrink-0 font-semibold tracking-[-.03em]"
+            >
+              {navigation?.logoText || schema.site.name}
+            </Link>
+            <div className="flex items-center gap-1 overflow-x-auto">
+              {schema.pages.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/site/${schema.site.slug}${item.slug ? `/${item.slug}` : ""}`}
+                  className={cn(
+                    "inline-flex min-h-10 shrink-0 items-center rounded-full px-3 text-xs font-medium",
+                    item.id === page.id
+                      ? "bg-white text-black"
+                      : "text-white/55 hover:bg-white/10 hover:text-white",
+                  )}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              {navigation?.ctaLabel && (
+                <a
+                  href={navigation.ctaHref || "#"}
+                  className="inline-flex min-h-10 shrink-0 items-center rounded-full bg-violet-500 px-4 text-xs font-semibold text-white"
+                >
+                  {navigation.ctaLabel}
+                </a>
+              )}
             </div>
-            {footer?.showLinks !== false && (
-              <div className="flex flex-wrap gap-4 text-sm opacity-60">
-                {schema.pages.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/site/${schema.site.slug}${item.slug ? `/${item.slug}` : ""}`}
+          </nav>
+        )}
+        {page?.sections.map((section, index) => {
+          const Block = registry[section.type] ?? StoryBlock;
+          return (
+            <div
+              key={section.id}
+              role={editable ? "group" : undefined}
+              tabIndex={editable ? 0 : undefined}
+              aria-label={
+                editable
+                  ? `Seleccionar sección ${section.content.title}`
+                  : undefined
+              }
+              onClick={(event) => {
+                if (!editable) return;
+                event.stopPropagation();
+                onSelect?.(section.id);
+              }}
+              onKeyDown={(event) => {
+                if (
+                  editable &&
+                  event.currentTarget === event.target &&
+                  (event.key === "Enter" || event.key === " ")
+                )
+                  onSelect?.(section.id);
+              }}
+              onDragOver={(event) => {
+                if (!editable || !draggingId || draggingId === section.id)
+                  return;
+                event.preventDefault();
+                setDragOverId(section.id);
+              }}
+              onDrop={(event) => {
+                if (!editable || !draggingId) return;
+                event.preventDefault();
+                if (draggingId !== section.id)
+                  onReorder?.(draggingId, section.id);
+                setDraggingId(null);
+                setDragOverId(null);
+              }}
+              className={cn(
+                editable &&
+                  "vexora-editable-section relative cursor-pointer outline-none transition",
+                selectedId === section.id && "vexora-section-selected z-10",
+                dragOverId === section.id && "vexora-section-drop-target",
+                draggingId === section.id && "opacity-45",
+              )}
+            >
+              <Block section={section} />
+              {editable && selectedId === section.id && (
+                <div
+                  className="vexora-section-toolbar"
+                  role="toolbar"
+                  aria-label="Acciones de la sección"
+                >
+                  <button
+                    draggable={!section.locked}
+                    onDragStart={(event) => {
+                      event.stopPropagation();
+                      event.dataTransfer.effectAllowed = "move";
+                      event.dataTransfer.setData("text/plain", section.id);
+                      setDraggingId(section.id);
+                    }}
+                    onDragEnd={() => {
+                      setDraggingId(null);
+                      setDragOverId(null);
+                    }}
+                    className="vexora-section-tool vexora-drag-tool"
+                    aria-label={`Arrastrar ${section.content.title}`}
+                    title="Arrastra para cambiar el orden"
                   >
-                    {item.name}
-                  </Link>
-                ))}
+                    <GripVertical size={14} />
+                    <span>Arrastrar</span>
+                  </button>
+                  <span className="vexora-section-kind">{section.type}</span>
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onMove?.(section.id, -1);
+                    }}
+                    disabled={index === 0}
+                    className="vexora-section-tool"
+                    aria-label="Mover sección arriba"
+                    title="Mover arriba"
+                  >
+                    <ArrowUp size={14} />
+                  </button>
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onMove?.(section.id, 1);
+                    }}
+                    disabled={index === page.sections.length - 1}
+                    className="vexora-section-tool"
+                    aria-label="Mover sección abajo"
+                    title="Mover abajo"
+                  >
+                    <ArrowDown size={14} />
+                  </button>
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onDuplicate?.(section.id);
+                    }}
+                    className="vexora-section-tool"
+                    aria-label="Duplicar sección"
+                    title="Duplicar"
+                  >
+                    <Copy size={14} />
+                  </button>
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onRemove?.(section.id);
+                    }}
+                    className="vexora-section-tool vexora-delete-tool"
+                    aria-label="Eliminar sección"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {footer?.enabled !== false && (
+          <footer
+            className="vexora-site-footer border-t border-current/10 px-6 py-14"
+            style={{
+              background: footer?.background ?? "#09090c",
+              color: footer?.foreground ?? "#ffffff",
+            }}
+          >
+            <div
+              className={cn(
+                "vexora-footer-layout mx-auto flex max-w-6xl flex-col gap-8",
+                footer?.layout === "centered" && "items-center text-center",
+                footer?.layout === "stacked" && "items-start",
+                (!footer?.layout || footer.layout === "split") &&
+                  "vexora-footer-split",
+              )}
+            >
+              <div>
+                <p
+                  contentEditable={editable}
+                  suppressContentEditableWarning
+                  className={cn(
+                    "vexora-footer-headline max-w-xl font-semibold",
+                    editable && "vexora-inline-edit",
+                  )}
+                  onBlur={(event) => {
+                    if (!editable) return;
+                    const headline = event.currentTarget.innerText.trim();
+                    if (headline !== footerSettings.headline)
+                      onSiteChange?.({
+                        footer: { ...footerSettings, headline },
+                      });
+                  }}
+                >
+                  {footerSettings.headline}
+                </p>
+                <p className="mt-4 text-sm opacity-45">
+                  © {new Date().getFullYear()}{" "}
+                  {navigation?.logoText || schema.site.name}.{" "}
+                  <span
+                    contentEditable={editable}
+                    suppressContentEditableWarning
+                    className={cn(editable && "vexora-inline-edit")}
+                    onBlur={(event) => {
+                      if (!editable) return;
+                      const copyright = event.currentTarget.innerText.trim();
+                      if (copyright !== footerSettings.copyright)
+                        onSiteChange?.({
+                          footer: { ...footerSettings, copyright },
+                        });
+                    }}
+                  >
+                    {footerSettings.copyright}
+                  </span>
+                </p>
               </div>
-            )}
-          </div>
-        </footer>
-      )}
-    </div>
+              {footer?.showLinks !== false && (
+                <div className="flex flex-wrap gap-4 text-sm opacity-60">
+                  {schema.pages.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/site/${schema.site.slug}${item.slug ? `/${item.slug}` : ""}`}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </footer>
+        )}
+      </div>
+    </EditingContext.Provider>
   );
 }

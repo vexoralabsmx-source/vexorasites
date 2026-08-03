@@ -35,6 +35,7 @@ import {
   GripVertical,
   ImageIcon,
   Laptop,
+  Layers3,
   LoaderCircle,
   Lock,
   Monitor,
@@ -45,6 +46,7 @@ import {
   Rocket,
   Smartphone,
   Tablet,
+  Type,
   Trash2,
   Undo2,
   X,
@@ -63,6 +65,7 @@ import type { AnimationPreset, SiteSection } from "@/types/site";
 import { AdvancedEditorTools } from "@/components/editor/advanced-editor-tools";
 
 type SectionTypography = NonNullable<SiteSection["styles"]["typography"]>;
+type FontChoice = NonNullable<SectionTypography["headingFont"]>;
 
 const blockLabels: Record<SiteSection["type"], string> = {
   hero: "Hero cinematográfico",
@@ -94,6 +97,13 @@ const fontOptions = [
   ["cormorant", "Cormorant · lujo"],
   ["ibm-plex-mono", "IBM Plex Mono · técnica"],
 ] as const;
+const fontPreviewStyles: Record<FontChoice, string> = {
+  geist: "var(--font-geist-sans), sans-serif",
+  manrope: "var(--font-manrope), sans-serif",
+  "space-grotesk": "var(--font-space-grotesk), sans-serif",
+  cormorant: "var(--font-cormorant), Georgia, serif",
+  "ibm-plex-mono": "var(--font-ibm-plex-mono), monospace",
+};
 
 function SortableLayer({
   section,
@@ -181,7 +191,9 @@ export function EditorShell({ projectId }: { projectId: string }) {
   const select = useEditorStore((s) => s.select);
   const setDevice = useEditorStore((s) => s.setDevice);
   const update = useEditorStore((s) => s.updateSection);
+  const updateSite = useEditorStore((s) => s.updateSite);
   const reorder = useEditorStore((s) => s.reorder);
+  const move = useEditorStore((s) => s.move);
   const duplicate = useEditorStore((s) => s.duplicate);
   const remove = useEditorStore((s) => s.remove);
   const addBlock = useEditorStore((s) => s.addBlock);
@@ -363,6 +375,12 @@ export function EditorShell({ projectId }: { projectId: string }) {
     lineHeight: 1,
     letterSpacing: 0,
   };
+  const globalTypography = schema.site.theme.typography ?? {
+    headingFont: "geist" as const,
+    bodyFont: "geist" as const,
+    headingScale: 1,
+    bodyScale: 1,
+  };
   const width =
     device === "desktop" ? "100%" : device === "tablet" ? "768px" : "390px";
   const dragEnd = (event: DragEndEvent) => {
@@ -421,9 +439,9 @@ export function EditorShell({ projectId }: { projectId: string }) {
       </div>
     );
   return (
-    <main className="editor-a11y flex h-dvh flex-col overflow-hidden bg-[#0a0a0d] text-[#f7f4ef]">
+    <main className="vexora-editor editor-a11y flex h-dvh flex-col overflow-hidden bg-[#09090d] text-[#f7f4ef]">
       <Toaster theme="dark" position="bottom-center" />
-      <header className="z-[130] flex h-16 shrink-0 items-center justify-between border-b border-white/[.08] bg-[#101014] px-2 md:px-3">
+      <header className="vexora-editor-header z-[130] flex h-[72px] shrink-0 items-center justify-between px-2 md:px-4">
         <div className="flex min-w-0 items-center gap-1 md:gap-3">
           <Link
             href="/dashboard"
@@ -473,7 +491,7 @@ export function EditorShell({ projectId }: { projectId: string }) {
             </p>
           </div>
         </div>
-        <div className="absolute left-1/2 hidden -translate-x-1/2 items-center rounded-xl border border-white/[.08] bg-black/20 p-1 lg:flex">
+        <div className="vexora-device-switcher absolute left-1/2 hidden -translate-x-1/2 items-center p-1 lg:flex">
           {[
             ["desktop", Monitor, "Escritorio"],
             ["tablet", Tablet, "Tablet"],
@@ -484,8 +502,8 @@ export function EditorShell({ projectId }: { projectId: string }) {
               onClick={() => setDevice(value as typeof device)}
               aria-label={String(label)}
               className={cn(
-                "grid size-9 place-items-center rounded-lg text-white/35 hover:text-white",
-                device === value && "bg-white/10 text-white",
+                "grid size-10 place-items-center rounded-xl text-white/40 transition hover:text-white",
+                device === value && "bg-white text-[#111116] shadow-lg",
               )}
             >
               <Icon size={16} />
@@ -538,8 +556,8 @@ export function EditorShell({ projectId }: { projectId: string }) {
       <div className="flex min-h-0 flex-1">
         <aside
           className={cn(
-            "z-30 shrink-0 border-r border-white/[.08] bg-[#111116] transition-all",
-            leftOpen ? "w-[292px]" : "w-12",
+            "vexora-editor-sidebar z-30 shrink-0 transition-all",
+            leftOpen ? "w-[312px]" : "w-12",
           )}
         >
           <div className="flex h-12 items-center justify-between border-b border-white/[.07] p-1">
@@ -644,10 +662,10 @@ export function EditorShell({ projectId }: { projectId: string }) {
             </div>
           )}
         </aside>
-        <section className="relative min-w-0 flex-1 overflow-auto bg-[#19191f] p-4 md:p-7">
-          <div className="pointer-events-none absolute inset-0 opacity-[.07] [background-image:radial-gradient(white_1px,transparent_1px)] [background-size:18px_18px]" />
+        <section className="vexora-workspace relative min-w-0 flex-1 overflow-auto p-4 md:p-8">
+          <div className="vexora-workspace-grid pointer-events-none absolute inset-0" />
           <div
-            className="relative mx-auto min-h-full overflow-hidden bg-white shadow-[0_30px_90px_rgba(0,0,0,.5)] transition-[width] duration-300"
+            className="vexora-canvas relative mx-auto min-h-full overflow-hidden bg-white transition-[width] duration-300"
             style={{ width, maxWidth: "100%" }}
           >
             <SiteRenderer
@@ -655,20 +673,43 @@ export function EditorShell({ projectId }: { projectId: string }) {
               pageSlug={currentPage.slug}
               editable
               selectedId={selectedId}
-              onSelect={select}
+              onSelect={(id) => {
+                select(id);
+                setRightOpen(true);
+                setRightTab("content");
+              }}
+              onContentChange={(id, patch) => {
+                const section = currentPage.sections.find(
+                  (item) => item.id === id,
+                );
+                if (!section) return;
+                update(id, {
+                  content: { ...section.content, ...patch },
+                });
+              }}
+              onReorder={reorder}
+              onMove={move}
+              onDuplicate={duplicate}
+              onRemove={remove}
+              onSiteChange={updateSite}
             />
           </div>
-          <div className="fixed bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-[#111116]/95 px-3 py-2 text-[10px] text-white/45 shadow-xl backdrop-blur">
-            <Laptop size={13} />
-            {currentPage.name} · {device} ·{" "}
-            {device === "desktop" ? "auto" : width}
-            <ChevronDown size={12} />
+          <div className="vexora-canvas-hint fixed bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 px-4 py-2.5 text-[11px] text-white/65">
+            <span className="flex items-center gap-2 text-white">
+              <Type size={14} className="text-violet-300" />
+              Haz clic en cualquier texto para editarlo
+            </span>
+            <span className="h-4 w-px bg-white/10" />
+            <span className="flex items-center gap-2">
+              <Laptop size={13} />
+              {device === "desktop" ? "Escritorio" : width}
+            </span>
           </div>
         </section>
         <aside
           className={cn(
-            "z-30 shrink-0 border-l border-white/[.08] bg-[#111116] transition-all",
-            rightOpen ? "w-[300px]" : "w-12",
+            "vexora-editor-sidebar z-30 shrink-0 transition-all",
+            rightOpen ? "w-[344px]" : "w-12",
           )}
         >
           <div className="flex h-12 items-center border-b border-white/[.07] p-1">
@@ -682,7 +723,8 @@ export function EditorShell({ projectId }: { projectId: string }) {
               <PanelRightClose size={17} />
             </button>
             {rightOpen && (
-              <span className="ml-2 truncate text-xs font-semibold">
+              <span className="ml-2 flex min-w-0 items-center gap-2 truncate text-xs font-semibold">
+                <Layers3 size={14} className="shrink-0 text-violet-300" />
                 {selected ? blockLabels[selected.type] : "Sin selección"}
               </span>
             )}
@@ -858,56 +900,38 @@ export function EditorShell({ projectId }: { projectId: string }) {
                       <p className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-white/35">
                         Tipografía del bloque
                       </p>
-                      <Field label="Fuente de títulos">
-                        <select
-                          value={selectedTypography.headingFont ?? ""}
-                          onChange={(e) =>
-                            update(selected.id, {
-                              styles: {
-                                ...selected.styles,
-                                typography: {
-                                  ...selectedTypography,
-                                  headingFont: (e.target.value ||
-                                    undefined) as SectionTypography["headingFont"],
-                                },
+                      <FontPicker
+                        label="Fuente de títulos"
+                        value={selectedTypography.headingFont}
+                        allowGlobal
+                        onChange={(headingFont) =>
+                          update(selected.id, {
+                            styles: {
+                              ...selected.styles,
+                              typography: {
+                                ...selectedTypography,
+                                headingFont,
                               },
-                            })
-                          }
-                          className="editor-input"
-                        >
-                          <option value="">Usar fuente global</option>
-                          {fontOptions.map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field label="Fuente de textos">
-                        <select
-                          value={selectedTypography.bodyFont ?? ""}
-                          onChange={(e) =>
-                            update(selected.id, {
-                              styles: {
-                                ...selected.styles,
-                                typography: {
-                                  ...selectedTypography,
-                                  bodyFont: (e.target.value ||
-                                    undefined) as SectionTypography["bodyFont"],
-                                },
+                            },
+                          })
+                        }
+                      />
+                      <FontPicker
+                        label="Fuente de textos"
+                        value={selectedTypography.bodyFont}
+                        allowGlobal
+                        onChange={(bodyFont) =>
+                          update(selected.id, {
+                            styles: {
+                              ...selected.styles,
+                              typography: {
+                                ...selectedTypography,
+                                bodyFont,
                               },
-                            })
-                          }
-                          className="editor-input"
-                        >
-                          <option value="">Usar fuente global</option>
-                          {fontOptions.map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
+                            },
+                          })
+                        }
+                      />
                       <Field
                         label={`Escala de títulos · ${Math.round(selectedTypography.headingScale * 100)}%`}
                       >
@@ -1000,6 +1024,49 @@ export function EditorShell({ projectId }: { projectId: string }) {
                           className="w-full accent-violet-500"
                         />
                       </Field>
+                      <details className="group mt-5 rounded-2xl border border-white/10 bg-white/[.025] p-3">
+                        <summary className="cursor-pointer list-none text-xs font-semibold text-white/70">
+                          Tipografía de todo el sitio
+                          <span className="float-right text-white/30 transition group-open:rotate-180">
+                            <ChevronDown size={14} />
+                          </span>
+                        </summary>
+                        <div className="mt-4 border-t border-white/10 pt-4">
+                          <FontPicker
+                            label="Títulos globales"
+                            value={globalTypography.headingFont}
+                            onChange={(headingFont) =>
+                              updateSite({
+                                theme: {
+                                  ...schema.site.theme,
+                                  typography: {
+                                    ...globalTypography,
+                                    headingFont:
+                                      headingFont ??
+                                      globalTypography.headingFont,
+                                  },
+                                },
+                              })
+                            }
+                          />
+                          <FontPicker
+                            label="Textos globales"
+                            value={globalTypography.bodyFont}
+                            onChange={(bodyFont) =>
+                              updateSite({
+                                theme: {
+                                  ...schema.site.theme,
+                                  typography: {
+                                    ...globalTypography,
+                                    bodyFont:
+                                      bodyFont ?? globalTypography.bodyFont,
+                                  },
+                                },
+                              })
+                            }
+                          />
+                        </div>
+                      </details>
                     </div>
                   </>
                 )}
@@ -1177,6 +1244,65 @@ export function EditorShell({ projectId }: { projectId: string }) {
         </div>
       )}
     </main>
+  );
+}
+function FontPicker({
+  label,
+  value,
+  allowGlobal = false,
+  onChange,
+}: {
+  label: string;
+  value?: FontChoice;
+  allowGlobal?: boolean;
+  onChange: (value: FontChoice | undefined) => void;
+}) {
+  return (
+    <fieldset className="mb-5">
+      <legend className="mb-2 text-[11px] font-medium text-white/55">
+        {label}
+      </legend>
+      <div className="grid grid-cols-2 gap-2">
+        {allowGlobal && (
+          <button
+            type="button"
+            onClick={() => onChange(undefined)}
+            aria-pressed={!value}
+            className={cn(
+              "font-choice col-span-2 min-h-11 text-left",
+              !value && "font-choice-active",
+            )}
+          >
+            <span className="text-xs font-semibold">Heredar fuente global</span>
+            <span className="text-[10px] text-white/35">
+              Mantiene consistencia en todo el sitio
+            </span>
+          </button>
+        )}
+        {fontOptions.map(([font, name]) => (
+          <button
+            type="button"
+            key={font}
+            onClick={() => onChange(font)}
+            aria-pressed={value === font}
+            className={cn(
+              "font-choice min-h-[72px] text-left",
+              value === font && "font-choice-active",
+            )}
+          >
+            <span
+              className="text-2xl leading-none"
+              style={{ fontFamily: fontPreviewStyles[font] }}
+            >
+              Ag
+            </span>
+            <span className="mt-2 block truncate text-[10px] text-white/50">
+              {name.split(" · ")[0]}
+            </span>
+          </button>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 function Field({
