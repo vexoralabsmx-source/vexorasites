@@ -45,6 +45,10 @@ test("incluye las superficies y contratos principales del MVP", async () => {
   assert.match(templates, /orbital-labs/);
   assert.match(templates, /forge-athletic/);
   assert.match(templates, /mara-visual/);
+  assert.match(templates, /apex-capital/);
+  assert.match(templates, /serein-residences/);
+  assert.match(templates, /monolith-ai/);
+  assert.match(templates, /slug: "servicios"/);
   assert.match(editor, /DndContext/);
   assert.match(editor, /vexora-published-/);
   assert.match(migration, /enable row level security/i);
@@ -66,4 +70,8 @@ test("incluye las superficies y contratos principales del MVP", async () => {
   assert.doesNotMatch(env, /eyJ|service_role\s*=\s*\S+/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await access(new URL("../public/og.png", import.meta.url));
+  await access(new URL("../app/features/page.tsx", import.meta.url));
+  await access(new URL("../app/pricing/page.tsx", import.meta.url));
+  await access(new URL("../app/showcase/page.tsx", import.meta.url));
+  await access(new URL("../app/site/[slug]/[page]/page.tsx", import.meta.url));
 });

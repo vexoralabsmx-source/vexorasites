@@ -78,6 +78,7 @@ export type AnimationPreset = z.infer<typeof animationPresetSchema>;
 export type BlockType = z.infer<typeof blockTypeSchema>;
 export type SiteSection = z.infer<typeof siteSectionSchema>;
 export type SiteSchema = z.infer<typeof siteSchema>;
+export type SitePage = SiteSchema["pages"][number];
 export type DeviceMode = "desktop" | "tablet" | "mobile";
 
 export interface TemplateDefinition {

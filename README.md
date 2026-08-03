@@ -1,6 +1,6 @@
 # Vexora Sites
 
-Vexora Sites es un SaaS no-code para crear, animar y publicar experiencias web premium con un editor visual estructurado. Este repositorio contiene un MVP funcional orientado a validar el flujo principal: crear un proyecto, elegir una plantilla, editar secciones, reordenarlas, configurar movimiento, previsualizar, guardar y publicar.
+Vexora Sites es un SaaS no-code para crear, animar y publicar experiencias web premium multipágina con un editor visual estructurado. Permite elegir una dirección visual, administrar páginas, editar y reordenar secciones, configurar movimiento, previsualizar, guardar y publicar.
 
 > Estado: primera versión funcional. Incluye un modo demo local para probar el producto sin credenciales y una integración preparada para Supabase.
 
@@ -89,7 +89,10 @@ Este modo sirve para validar la experiencia, no para producción ni colaboració
 | `/dashboard` | Proyectos y uso |
 | `/dashboard/new` | Asistente de creación |
 | `/account/media` | Biblioteca Cloudinary y tutorial permanente |
-| `/templates` | Biblioteca de seis plantillas |
+| `/templates` | Biblioteca de nueve sistemas visuales |
+| `/features` | Producto y capacidades |
+| `/pricing` | Planes y beneficios de beta |
+| `/showcase` | Galería de direcciones visuales |
 | `/editor/[id]` | Editor visual |
 | `/site/[slug]` | Sitio publicado |
 | `/admin` | Administración básica |
@@ -108,12 +111,12 @@ Sitio
         └── animación
 ```
 
-La primera versión evita el posicionamiento absoluto libre. El mismo `SiteRenderer` se usa en el lienzo, la vista previa y la ruta publicada para evitar diferencias visuales.
+La primera versión evita el posicionamiento absoluto libre. El mismo `SiteRenderer` se usa en el lienzo, la vista previa y las rutas publicadas para evitar diferencias visuales. Cada proyecto puede tener múltiples páginas; la portada se publica en `/site/[slug]` y las páginas secundarias en `/site/[slug]/[page]`.
 
 Piezas principales:
 
 - `types/site.ts`: esquema Zod y tipos estrictos.
-- `lib/templates.ts`: seis plantillas originales y datos iniciales.
+- `lib/templates.ts`: nueve sistemas visuales originales, cada uno con tres páginas iniciales.
 - `stores/editor-store.ts`: estado, historial local y operaciones del editor.
 - `components/renderer/site-renderer.tsx`: registro y renderizado compartido.
 - `components/editor/editor-shell.tsx`: selección, drag-and-drop, estilos, motion y responsive.
@@ -187,7 +190,9 @@ Checklist manual recomendada:
 7. Aplicar una animación y abrir Vista previa.
 8. Comprobar autoguardado, deshacer y rehacer.
 9. Publicar y abrir `/site/[slug]`.
-10. Revisar foco visible y reducción de movimiento.
+10. Crear, duplicar, renombrar y eliminar una página secundaria.
+11. Publicar y recorrer la navegación multipágina.
+12. Revisar foco visible y reducción de movimiento.
 
 ## Despliegue en Vercel
 

@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: { default: "Vexora Sites — Diseña experiencias web cinematográficas", template: "%s · Vexora Sites" },
-  description: "Crea, anima y publica sitios premium mediante un editor visual diseñado para marcas, negocios y creadores.",
-  openGraph: { title: "Vexora Sites", description: "Diseña experiencias web cinematográficas sin escribir código.", type: "website", locale: "es_MX", images: [{ url: "/og.png", width: 1734, height: 907, alt: "Vexora Sites, editor visual para experiencias web cinematográficas" }] },
-  twitter: { card: "summary_large_image", title: "Vexora Sites", description: "Diseña experiencias web cinematográficas sin escribir código.", images: ["/og.png"] },
+  description: "Crea sitios multipágina premium con dirección visual, movimiento y publicación integrada, sin escribir código.",
+  openGraph: { title: "Vexora Sites", description: "Sitios multipágina con dirección visual de nivel global, sin escribir código.", type: "website", locale: "es_MX", images: [{ url: "/og.png", width: 1734, height: 907, alt: "Vexora Sites, editor visual para experiencias web cinematográficas" }] },
+  twitter: { card: "summary_large_image", title: "Vexora Sites", description: "Sitios multipágina con dirección visual de nivel global.", images: ["/og.png"] },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
