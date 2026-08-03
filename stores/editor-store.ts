@@ -9,7 +9,7 @@ interface EditorState {
   schema: SiteSchema;
   selectedId: string | null;
   device: DeviceMode;
-  saving: "saved" | "saving";
+  saving: "saved" | "saving" | "offline" | "error";
   past: SiteSchema[];
   future: SiteSchema[];
   setSchema: (schema: SiteSchema) => void;
@@ -31,7 +31,7 @@ const snapshot = <T,>(value: T): T => structuredClone(value);
 
 export const useEditorStore = create<EditorState>((set) => ({
   schema: initial, selectedId: initial.pages[0].sections[0].id, device: "desktop", saving: "saved", past: [], future: [],
-  setSchema: (schema) => set({ schema: snapshot(schema), selectedId: schema.pages[0]?.sections[0]?.id ?? null, past: [], future: [] }),
+  setSchema: (schema) => set({ schema: snapshot(schema), selectedId: schema.pages[0]?.sections[0]?.id ?? null, past: [], future: [], saving: "saved" }),
   select: (selectedId) => set({ selectedId }),
   setDevice: (device) => set({ device }),
   updateSection: (id, patch) => set((state) => { const next = snapshot(state.schema); const current = next.pages[0].sections.find((item) => item.id === id); if (current) Object.assign(current, patch); next.site.status = next.site.status === "published" ? "changes" : next.site.status; return { schema: next, past: [...state.past.slice(-29), snapshot(state.schema)], future: [], saving: "saving" }; }),

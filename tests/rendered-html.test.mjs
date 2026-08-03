@@ -24,11 +24,15 @@ test("renderiza la landing de Vexora con contenido y metadatos propios", async (
 });
 
 test("incluye las superficies y contratos principales del MVP", async () => {
-  const [types, templates, editor, migration, env, packageJson] = await Promise.all([
+  const [types, templates, editor, migration, publishMigration, repository, sitesApi, publishApi, env, packageJson] = await Promise.all([
     readFile(new URL("../types/site.ts", import.meta.url), "utf8"),
     readFile(new URL("../lib/templates.ts", import.meta.url), "utf8"),
     readFile(new URL("../components/editor/editor-shell.tsx", import.meta.url), "utf8"),
     readFile(new URL("../supabase/migrations/202608020001_initial_schema.sql", import.meta.url), "utf8"),
+    readFile(new URL("../supabase/migrations/202608030002_publish_site_function.sql", import.meta.url), "utf8"),
+    readFile(new URL("../lib/sites/repository.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/sites/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/sites/[id]/publish/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../.env.example", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
   ]);
@@ -43,6 +47,13 @@ test("incluye las superficies y contratos principales del MVP", async () => {
   assert.match(editor, /vexora-published-/);
   assert.match(migration, /enable row level security/i);
   assert.match(migration, /published_schema/);
+  assert.match(publishMigration, /create or replace function public\.publish_site/i);
+  assert.match(publishMigration, /insert into public\.site_versions/i);
+  assert.match(publishMigration, /insert into public\.publications/i);
+  assert.match(repository, /siteSchema\.parse/);
+  assert.match(repository, /getPublishedSite/);
+  assert.match(sitesApi, /export async function POST/);
+  assert.match(publishApi, /publishSite/);
   assert.match(env, /NEXT_PUBLIC_SUPABASE_URL=/);
   assert.doesNotMatch(env, /eyJ|service_role\s*=\s*\S+/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);

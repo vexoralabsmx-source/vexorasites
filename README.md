@@ -55,6 +55,7 @@ No incluyas valores reales en `.env.example` ni confirmes archivos de entorno al
 
 ```text
 supabase/migrations/202608020001_initial_schema.sql
+supabase/migrations/202608030002_publish_site_function.sql
 supabase/seed.sql
 ```
 
@@ -138,7 +139,7 @@ Cada plantilla vive en `lib/templates.ts` y contiene una paleta, categoría, met
 - El historial conserva hasta 30 estados.
 - Publicar crea una copia separada para la ruta `/site/[slug]`; el borrador posterior no modifica automáticamente lo publicado.
 
-Con Supabase en producción, estas operaciones deben conectarse a `sites.site_schema`, `site_versions`, `sites.published_schema` y `publications` mediante acciones de servidor. El esquema y las políticas ya están preparados; la sincronización remota completa es la siguiente fase.
+Con Supabase configurado, el dashboard, el asistente, el editor y la ruta pública usan persistencia remota. El autoguardado actualiza `sites.site_schema`; el guardado manual crea una entrada en `site_versions`; y la publicación ejecuta una función transaccional que actualiza `sites.published_schema`, crea una versión y registra la publicación. Una copia local permite recuperar el último borrador si la red falla.
 
 ## Usuario administrador
 
@@ -187,16 +188,16 @@ La plantilla incluida también produce una salida compatible con OpenAI Sites/Cl
 
 - **La sesión vuelve a login:** verifica URL, anon key y Redirect URLs de Supabase.
 - **El dashboard usa datos demo:** faltan variables públicas o no se reinició el servidor.
-- **El sitio publicado no aparece en otro navegador:** estás usando el modo demo local; configura Supabase y completa la sincronización remota.
+- **El sitio publicado no aparece en otro navegador:** verifica que Supabase esté configurado, que ambas migraciones estén aplicadas y que la publicación haya finalizado sin error.
 - **Una animación no se reproduce:** revisa `prefers-reduced-motion`; Vexora lo respeta de forma intencional.
 - **El build falla en Windows por variables inline:** el proyecto usa `cross-env`; ejecuta `npm install` nuevamente.
 
 ## Limitaciones actuales y siguiente fase
 
-- La persistencia visual del modo demo es local. Falta conectar todas las mutaciones del editor a Supabase.
+- Sin credenciales de Supabase, la persistencia del modo demo permanece limitada al navegador actual.
 - El editor reordena secciones completas; mover elementos internos entre contenedores queda para la siguiente fase.
 - Motion Composer está representado por presets, intensidad y scrub; falta la composición visual de pasos/eventos.
 - Carga de imágenes, video, formularios reales, dominios, pagos, colaboradores y analíticas reales no están activos.
 - El panel admin permite revisar el sistema, pero sus mutaciones son demostrativas.
 
-La siguiente fase recomendada es conectar guardado/publicación/versiones con acciones de servidor en Supabase, añadir almacenamiento de medios con validación y ampliar el registro a elementos internos y storytelling por escenas.
+La siguiente fase recomendada es añadir almacenamiento de medios con validación, formularios reales y ampliar el registro a elementos internos y storytelling por escenas.
