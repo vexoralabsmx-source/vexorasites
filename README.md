@@ -36,6 +36,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ADMIN_EMAILS=
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=
 NODE_ENV=development
 ```
 
@@ -44,6 +46,8 @@ NODE_ENV=development
 - `SUPABASE_SERVICE_ROLE_KEY`: solo servidor; nunca debe llegar al navegador.
 - `NEXT_PUBLIC_APP_URL`: origen público de la aplicación.
 - `ADMIN_EMAILS`: correos administradores separados por coma.
+- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`: nombre público del entorno de Cloudinary.
+- `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`: preset unsigned restringido para el Upload Widget.
 
 No incluyas valores reales en `.env.example` ni confirmes archivos de entorno al repositorio.
 
@@ -84,6 +88,7 @@ Este modo sirve para validar la experiencia, no para producción ni colaboració
 | `/login`, `/register`, `/forgot-password` | Autenticación |
 | `/dashboard` | Proyectos y uso |
 | `/dashboard/new` | Asistente de creación |
+| `/account/media` | Biblioteca Cloudinary y tutorial permanente |
 | `/templates` | Biblioteca de seis plantillas |
 | `/editor/[id]` | Editor visual |
 | `/site/[slug]` | Sitio publicado |
@@ -141,6 +146,17 @@ Cada plantilla vive en `lib/templates.ts` y contiene una paleta, categoría, met
 
 Con Supabase configurado, el dashboard, el asistente, el editor y la ruta pública usan persistencia remota. El autoguardado actualiza `sites.site_schema`; el guardado manual crea una entrada en `site_versions`; y la publicación ejecuta una función transaccional que actualiza `sites.published_schema`, crea una versión y registra la publicación. Una copia local permite recuperar el último borrador si la red falla.
 
+## Fotos y videos con Cloudinary
+
+La ruta `/account/media` carga imágenes y videos directamente a Cloudinary mediante su Upload Widget. Vexora solo conserva el catálogo y las URLs en `assets`; no transporta ni almacena los archivos.
+
+1. Crea una cuenta de Cloudinary.
+2. En **Settings → Upload → Upload presets**, crea un preset `Unsigned` y limita formatos y tamaño.
+3. Configura `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` y `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`.
+4. Reinicia la aplicación y abre **Fotos y medios** en el dashboard.
+
+La interfaz admite hasta 10 MB por archivo y muestra siempre un tutorial, acceso al panel de Cloudinary y botones para copiar enlaces. Las imágenes Cloudinary se sirven con `f_auto,q_auto` y dimensiones reservadas para reducir peso y saltos de diseño.
+
 ## Usuario administrador
 
 Agrega uno o más correos en `.env.local`:
@@ -197,7 +213,7 @@ La plantilla incluida también produce una salida compatible con OpenAI Sites/Cl
 - Sin credenciales de Supabase, la persistencia del modo demo permanece limitada al navegador actual.
 - El editor reordena secciones completas; mover elementos internos entre contenedores queda para la siguiente fase.
 - Motion Composer está representado por presets, intensidad y scrub; falta la composición visual de pasos/eventos.
-- Carga de imágenes, video, formularios reales, dominios, pagos, colaboradores y analíticas reales no están activos.
+- Formularios reales, dominios, pagos, colaboradores y analíticas reales no están activos.
 - El panel admin permite revisar el sistema, pero sus mutaciones son demostrativas.
 
 La siguiente fase recomendada es añadir almacenamiento de medios con validación, formularios reales y ampliar el registro a elementos internos y storytelling por escenas.

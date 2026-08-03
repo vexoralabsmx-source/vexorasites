@@ -24,7 +24,7 @@ test("renderiza la landing de Vexora con contenido y metadatos propios", async (
 });
 
 test("incluye las superficies y contratos principales del MVP", async () => {
-  const [types, templates, editor, migration, publishMigration, repository, sitesApi, publishApi, env, packageJson] = await Promise.all([
+  const [types, templates, editor, migration, publishMigration, repository, sitesApi, publishApi, assetsApi, mediaCenter, env, packageJson] = await Promise.all([
     readFile(new URL("../types/site.ts", import.meta.url), "utf8"),
     readFile(new URL("../lib/templates.ts", import.meta.url), "utf8"),
     readFile(new URL("../components/editor/editor-shell.tsx", import.meta.url), "utf8"),
@@ -33,6 +33,8 @@ test("incluye las superficies y contratos principales del MVP", async () => {
     readFile(new URL("../lib/sites/repository.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/sites/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/sites/[id]/publish/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/assets/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../components/media/media-center.tsx", import.meta.url), "utf8"),
     readFile(new URL("../.env.example", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
   ]);
@@ -54,7 +56,13 @@ test("incluye las superficies y contratos principales del MVP", async () => {
   assert.match(repository, /getPublishedSite/);
   assert.match(sitesApi, /export async function POST/);
   assert.match(publishApi, /publishSite/);
+  assert.match(assetsApi, /createMediaAssetSchema/);
+  assert.match(mediaCenter, /createUploadWidget/);
+  assert.match(mediaCenter, /Tutorial rápido de Cloudinary/);
+  assert.match(types, /media: z\.array/);
   assert.match(env, /NEXT_PUBLIC_SUPABASE_URL=/);
+  assert.match(env, /NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=/);
+  assert.doesNotMatch(env, /CLOUDINARY_API_SECRET\s*=\s*\S+/i);
   assert.doesNotMatch(env, /eyJ|service_role\s*=\s*\S+/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await access(new URL("../public/og.png", import.meta.url));

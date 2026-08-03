@@ -30,6 +30,14 @@ export const siteSectionSchema = z.object({
     body: z.string().optional(),
     cta: z.string().optional(),
     items: z.array(z.object({ title: z.string(), text: z.string() })).optional(),
+    media: z.array(z.object({
+      url: z.string().url(),
+      publicId: z.string(),
+      type: z.enum(["image", "video"]),
+      alt: z.string().default(""),
+      width: z.number().positive().optional(),
+      height: z.number().positive().optional(),
+    })).optional(),
   }),
   styles: z.object({
     background: z.string(),
