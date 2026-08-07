@@ -42,7 +42,11 @@ if (fs.existsSync(clientDir)) {
     if (fs.existsSync(assetsDir)) {
       const files = fs.readdirSync(assetsDir);
       cssFile = files.find((f) => f.endsWith(".css")) || "";
-      jsFiles = files.filter((f) => f.endsWith(".js"));
+      const allJs = files.filter((f) => f.endsWith(".js"));
+      // Only include main entry bundles to prevent module race conditions
+      const entryPrefixes = ["framework-", "client-", "router-", "index-", "landing-page-", "main-"];
+      jsFiles = allJs.filter((f) => entryPrefixes.some((p) => f.startsWith(p)));
+      if (jsFiles.length === 0) jsFiles = allJs.slice(0, 3);
     }
 
     const cssLink = cssFile ? `<link rel="stylesheet" href="/assets/${cssFile}">` : "";
@@ -61,13 +65,31 @@ if (fs.existsSync(clientDir)) {
   ${cssLink}
 </head>
 <body class="bg-[#050508] text-white">
-  <div id="root"></div>
+  <div id="root">
+    <div style="min-height: 100vh; background-color: #050508; color: #f8fafc; display: flex; flex-direction: column; align-items: center; justify-center; text-align: center; padding: 2rem; font-family: system-ui, -apple-system, sans-serif;">
+      <div style="margin-top: 10vh; max-width: 600px;">
+        <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; border: 1px solid rgba(192,132,252,0.3); background-color: rgba(139,92,246,0.1); color: #c084fc; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;">
+          VEXORA SITES
+        </span>
+        <h1 style="font-size: 2.25rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.75rem; color: #ffffff;">
+          Creador de Sitios Web de Ultra-Lujo
+        </h1>
+        <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">
+          Cargando entorno cinematográfico y motor visual...
+        </p>
+        <div style="display: inline-block; width: 28px; height: 28px; border: 3px solid rgba(192,132,252,0.2); border-top-color: #c084fc; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+      </div>
+    </div>
+    <style>
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </div>
   ${jsScripts}
 </body>
 </html>`;
 
     fs.writeFileSync(indexPath, htmlContent, "utf-8");
-    console.log("Successfully created dist/client/index.html for Vercel 404 resolution.");
+    console.log("Successfully created dist/client/index.html with entry bundles.");
   } catch (err) {
     console.warn("Could not create dist/client/index.html:", err);
   }
