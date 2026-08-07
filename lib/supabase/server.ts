@@ -2,13 +2,34 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+function getResolvedSupabaseUrl(envUrl?: string, key?: string): string {
+  if (key) {
+    try {
+      const parts = key.split(".");
+      if (parts.length === 3) {
+        const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        const jsonStr = Buffer.from(base64, "base64").toString("utf-8");
+        const payload = JSON.parse(jsonStr);
+        if (payload?.ref) {
+          return `https://${payload.ref}.supabase.co`;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+  }
+  return envUrl || "";
+}
+
 export function isServerSupabaseConfigured() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = getResolvedSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, key);
+  return Boolean(url && key);
 }
 
 export async function createServerSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = getResolvedSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL, key);
   if (!url || !key) return null;
   const cookieStore = await cookies();
   return createServerClient(url, key, {
