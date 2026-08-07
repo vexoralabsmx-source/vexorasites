@@ -147,7 +147,7 @@ export function SeoModal({
                 <Globe size={13} /> Vista previa en Google
               </p>
               <div className="rounded-xl border border-white/10 bg-[#07050e] p-4 font-sans text-xs">
-                <p className="text-[11px] text-[#8ab4f8] font-medium truncate">https://vexora.site/site/{schema.site.slug}</p>
+                <p className="text-[11px] text-[#8ab4f8] font-medium truncate">https://vexorasites.shop/site/{schema.site.slug}</p>
                 <p className="mt-1 text-sm font-semibold text-[#8ab4f8] hover:underline cursor-pointer truncate">
                   {title || schema.site.name}
                 </p>
@@ -171,7 +171,7 @@ export function SeoModal({
                   )}
                 </div>
                 <div className="p-3 bg-[#0c0818]">
-                  <p className="text-[10px] font-bold text-[#c084fc] uppercase tracking-wider">vexora.site</p>
+                  <p className="text-[10px] font-bold text-[#c084fc] uppercase tracking-wider">vexorasites.shop</p>
                   <p className="font-semibold text-white text-xs truncate mt-0.5">{title}</p>
                   <p className="text-[11px] text-slate-400 truncate mt-0.5">{description}</p>
                 </div>

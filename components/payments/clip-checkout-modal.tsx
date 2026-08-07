@@ -15,7 +15,7 @@ export function ClipCheckoutModal({
   initialPlan?: string;
 }) {
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
-  const [email, setEmail] = useState("usuario@vexora.site");
+  const [email, setEmail] = useState("usuario@vexorasites.shop");
   const [customApiKey, setCustomApiKey] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<LicenseKey | null>(null);

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     };
     const plan = body.plan ?? "studio";
     const amount = body.price ?? (plan === "scale" ? 79 : 29);
-    const email = body.email ?? "cliente@vexora.site";
+    const email = body.email ?? "cliente@vexorasites.shop";
 
     const secretKey = process.env.CLIP_SECRET_KEY || process.env.CLIP_API_KEY;
     const paymentLinkOverride = process.env.NEXT_PUBLIC_CLIP_PAYMENT_LINK;

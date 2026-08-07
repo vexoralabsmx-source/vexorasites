@@ -161,10 +161,10 @@ export function DomainManagerModal({
                   <tr>
                     <td className="px-4 py-3 font-bold text-[#c084fc]">CNAME</td>
                     <td className="px-4 py-3">www</td>
-                    <td className="px-4 py-3 text-slate-300">cname.vexora.site</td>
+                    <td className="px-4 py-3 text-slate-300">cname.vexorasites.shop</td>
                     <td className="px-4 py-3 text-right">
                       <button
-                        onClick={() => copyToClipboard("cname.vexora.site", "CNAME")}
+                        onClick={() => copyToClipboard("cname.vexorasites.shop", "CNAME")}
                         className="text-slate-400 hover:text-white"
                       >
                         <Copy size={14} />
