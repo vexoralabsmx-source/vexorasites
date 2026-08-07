@@ -1,10 +1,28 @@
+// ── Cloudflare-globals polyfills for Node.js ──────────────────────────────
+if (typeof globalThis.caches === "undefined") {
+  globalThis.caches = {
+    open: async () => ({
+      match: async () => undefined,
+      put: async () => {},
+      delete: async () => false,
+    }),
+    default: {
+      match: async () => undefined,
+      put: async () => {},
+      delete: async () => false,
+    },
+  };
+}
+if (typeof globalThis.navigator === "undefined") {
+  globalThis.navigator = { userAgent: "Cloudflare-Workers" };
+}
+
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-// In Vercel, __dirname of api/server.js → /var/task/api  →  ROOT is one level up
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const ROOT_DIR = join(__dirname, "..");
+const ROOT_DIR  = join(__dirname, "..");
 const CLIENT_DIR = join(ROOT_DIR, "dist", "client");
 
 const MIME = {
@@ -24,39 +42,44 @@ const MIME = {
   ".txt":   "text/plain",
 };
 
-// Cache worker per container reuse
-let _worker = null;
-async function getWorker() {
-  if (_worker) return _worker;
-  const workerPath = join(ROOT_DIR, "dist", "server", "index.js");
-  const mod = await import(workerPath);
-  _worker = mod.default;
-  console.log("[vexora] Worker loaded — fetch:", typeof _worker?.fetch);
-  return _worker;
+// ── Load Worker eagerly at module load time ──────────────────────────────
+console.log("[vexora] Loading worker...");
+let _workerPromise = null;
+function getWorker() {
+  if (!_workerPromise) {
+    _workerPromise = import(pathToFileURL(join(ROOT_DIR, "dist", "server", "index.js")).href)
+      .then((m) => {
+        const w = m.default;
+        console.log("[vexora] Worker ready — fetch:", typeof w?.fetch);
+        return w;
+      })
+      .catch((err) => {
+        console.error("[vexora] Worker load error:", err?.message);
+        _workerPromise = null; // reset so it retries
+        throw err;
+      });
+  }
+  return _workerPromise;
 }
+
+// Start loading immediately
+getWorker().catch(() => {});
 
 function buildEnv() {
-  return {
-    NEXT_PUBLIC_APP_URL:                   process.env.NEXT_PUBLIC_APP_URL ?? "",
-    NEXT_PUBLIC_SUPABASE_URL:              process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    NEXT_PUBLIC_SUPABASE_ANON_KEY:         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
-    SUPABASE_SERVICE_ROLE_KEY:             process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME:     process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ?? "",
-    NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET:  process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET ?? "",
-    CLOUDINARY_API_KEY:                    process.env.CLOUDINARY_API_KEY ?? "",
-    CLOUDINARY_API_SECRET:                 process.env.CLOUDINARY_API_SECRET ?? "",
-    CLIP_SECRET_KEY:                       process.env.CLIP_SECRET_KEY ?? "",
-    CLIP_API_KEY:                          process.env.CLIP_API_KEY ?? "",
-    ADMIN_EMAILS:                          process.env.ADMIN_EMAILS ?? "vexoralabsmx@gmail.com",
-    NODE_ENV:                              process.env.NODE_ENV ?? "production",
-  };
+  const env = {};
+  for (const [k, v] of Object.entries(process.env)) {
+    if (v != null) env[k] = v;
+  }
+  if (!env.ADMIN_EMAILS) env.ADMIN_EMAILS = "vexoralabsmx@gmail.com";
+  return env;
 }
 
-// ─── Vercel Serverless Handler ─────────────────────────────────────────────
+// ── Vercel Serverless Handler ────────────────────────────────────────────
 export default async function handler(req, res) {
-  const pathname = req.url?.split("?")[0] ?? "/";
+  const pathname = (req.url ?? "/").split("?")[0];
+  console.log(`[vexora] ${req.method} ${pathname}`);
 
-  // ── Serve static files from dist/client ──────────────────────────────────
+  // ── Static files from dist/client ──────────────────────────────────────
   if (pathname !== "/" && !pathname.includes("..") && !pathname.startsWith("/api/")) {
     const filePath = join(CLIENT_DIR, pathname);
     if (existsSync(filePath) && statSync(filePath).isFile()) {
@@ -64,36 +87,34 @@ export default async function handler(req, res) {
       const ext = extname(filePath);
       const mime = MIME[ext] ?? "application/octet-stream";
       res.setHeader("Content-Type", mime);
-      if (pathname.startsWith("/assets/")) {
-        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-      } else {
-        res.setHeader("Cache-Control", "public, max-age=3600");
-      }
-      res.status(200).end(content);
-      return;
+      res.setHeader(
+        "Cache-Control",
+        pathname.startsWith("/assets/")
+          ? "public, max-age=31536000, immutable"
+          : "public, max-age=3600"
+      );
+      return res.status(200).end(content);
     }
   }
 
-  // ── Forward to Cloudflare Worker handler ─────────────────────────────────
+  // ── Worker SSR ─────────────────────────────────────────────────────────
   try {
     const worker = await getWorker();
+
     if (!worker?.fetch) {
-      res.status(503).end("Worker not available");
-      return;
+      console.error("[vexora] Worker has no fetch handler");
+      return res.status(503).end("Worker not ready");
     }
 
-    // Build full URL
-    const proto = req.headers["x-forwarded-proto"]?.split(",")[0].trim() ?? "https";
-    const host  = req.headers.host ?? "vexorasites.shop";
+    const proto  = (req.headers["x-forwarded-proto"] ?? "https").split(",")[0].trim();
+    const host   = req.headers.host ?? "vexorasites.shop";
     const fullUrl = `${proto}://${host}${req.url}`;
 
-    // Build request headers
     const webHeaders = new Headers();
     for (const [k, v] of Object.entries(req.headers)) {
       if (v != null) webHeaders.set(k, Array.isArray(v) ? v.join(", ") : v);
     }
 
-    // Collect body for non-GET requests
     let bodyBuffer = null;
     if (req.method !== "GET" && req.method !== "HEAD") {
       const chunks = [];
@@ -101,7 +122,7 @@ export default async function handler(req, res) {
       if (chunks.length) bodyBuffer = Buffer.concat(chunks);
     }
 
-    const webRequest = new Request(fullUrl, {
+    const webReq = new Request(fullUrl, {
       method:  req.method,
       headers: webHeaders,
       body:    bodyBuffer ?? undefined,
@@ -111,24 +132,28 @@ export default async function handler(req, res) {
     const env = buildEnv();
     const ctx = { waitUntil: () => {}, passThroughOnException: () => {} };
 
-    const webResponse = await worker.fetch(webRequest, env, ctx);
+    console.log("[vexora] Calling worker.fetch...");
+    const webRes = await worker.fetch(webReq, env, ctx);
+    console.log("[vexora] Worker responded:", webRes.status);
 
-    // Write headers
-    webResponse.headers.forEach((v, k) => res.setHeader(k, v));
-    res.status(webResponse.status);
+    webRes.headers.forEach((v, k) => res.setHeader(k, v));
+    res.status(webRes.status);
 
-    // Stream body
-    if (webResponse.body) {
-      const reader = webResponse.body.getReader();
-      while (true) {
+    if (webRes.body) {
+      const reader = webRes.body.getReader();
+      const pump = async () => {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) { res.end(); return; }
         res.write(value);
-      }
+        return pump();
+      };
+      await pump();
+    } else {
+      res.end();
     }
-    res.end();
   } catch (err) {
-    console.error("[vexora] Handler error:", err?.message ?? err);
+    console.error("[vexora] Error:", err?.message ?? err, err?.stack);
     if (!res.headersSent) res.status(500).end("Internal Server Error");
+    else res.end();
   }
 }

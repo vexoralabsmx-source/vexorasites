@@ -3,22 +3,14 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "framework": null,
-  "builds": [
-    {
-      "src": "api/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "dist/server/**",
-          "dist/client/**"
-        ]
-      }
+  "functions": {
+    "api/server.js": {
+      "memory": 1024,
+      "maxDuration": 30,
+      "includeFiles": "dist/**"
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/api/server"
-    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/server" }
   ]
 }
