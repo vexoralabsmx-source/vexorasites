@@ -32,14 +32,8 @@ import { ShareQrModal } from "@/components/dashboard/share-qr-modal";
 import { templates } from "@/lib/templates";
 import type { ProjectSummary } from "@/types/site";
 
-const demoProjects: ProjectSummary[] = [
-  { id: "orbital-labs", name: "Orbital Studio", slug: "orbital-studio", template: "Orbital Labs", status: "published", updatedAt: "Hace 18 min", palette: ["#080d20", "#7667ff"] },
-  { id: "mesa-nueve", name: "Mesa Nueve", slug: "mesa-nueve", template: "Mesa Nueve", status: "changes", updatedAt: "Ayer", palette: ["#efe5d3", "#b6442a"] },
-  { id: "noir-atelier", name: "Atelier Nómada", slug: "atelier-nomada", template: "Noir Atelier", status: "draft", updatedAt: "Hace 4 días", palette: ["#171215", "#d4a993"] },
-];
-
 export function DashboardShell({
-  initialProjects = demoProjects,
+  initialProjects = [],
   persistenceMode = "local",
 }: {
   initialProjects?: ProjectSummary[];
@@ -47,7 +41,7 @@ export function DashboardShell({
 }) {
   const [mobileNav, setMobileNav] = useState(false);
   const [activeTab, setActiveTab] = useState<"projects" | "stats" | "activity">("projects");
-  const [projects, setProjects] = useState(initialProjects);
+  const [projects, setProjects] = useState<ProjectSummary[]>(initialProjects);
   const [showClipModal, setShowClipModal] = useState(false);
   const [domainModalProject, setDomainModalProject] = useState<ProjectSummary | null>(null);
   const [qrModalProject, setQrModalProject] = useState<ProjectSummary | null>(null);
@@ -58,7 +52,7 @@ export function DashboardShell({
       try {
         const stored = JSON.parse(localStorage.getItem("vexora-projects") ?? "[]") as ProjectSummary[];
         if (stored.length) {
-          setProjects([...stored, ...demoProjects.filter((d) => !stored.some((s) => s.slug === d.slug))]);
+          setProjects(stored);
         }
       } catch {}
     }, 0);
@@ -69,12 +63,12 @@ export function DashboardShell({
   const draftCount = projects.filter((p) => p.status === "draft").length;
   const changesCount = projects.filter((p) => p.status === "changes").length;
 
-  const activityLog = [
-    { time: "Hace 12 min", action: "Publicación de sitio", detail: "Versión v1.4 de Orbital Studio en producción", type: "publish" },
-    { time: "Hace 2 horas", action: "Guardado de sección", detail: "Actualizada sección Hero principal en Mesa Nueve", type: "edit" },
-    { time: "Ayer", action: "Nuevo medio de Cloudinary", detail: "Subida imagen 'hero_bg_compressed.webp'", type: "media" },
-    { time: "Hace 3 días", action: "Nuevo sitio creado", detail: "Proyecto inicializado con plantilla Noir Atelier", type: "create" },
-  ];
+  const activityLog = projects.map((p) => ({
+    time: p.updatedAt || "Reciente",
+    action: p.status === "published" ? "Publicación de sitio" : p.status === "changes" ? "Guardado de cambios" : "Proyecto inicializado",
+    detail: `Sitio "${p.name}" (${p.slug}) — plantilla ${p.template}`,
+    type: p.status === "published" ? "publish" : p.status === "changes" ? "edit" : "create",
+  }));
 
   return (
     <div className="min-h-dvh bg-[#050508] text-[#f8fafc]">

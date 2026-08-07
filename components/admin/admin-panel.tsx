@@ -67,6 +67,8 @@ export function AdminPanel() {
   const [adminEmail, setAdminEmail] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginInput, setLoginInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [registeredPassword, setRegisteredPassword] = useState<string | null>(null);
 
   // License & Coupon State
   const [keys, setKeys] = useState<LicenseKey[]>([]);
@@ -76,9 +78,15 @@ export function AdminPanel() {
   const [newPlan, setNewPlan] = useState<"studio" | "scale" | "enterprise">("studio");
   const [newDesc, setNewDesc] = useState("");
 
+  // Change Password state
+  const [changePassOpen, setChangePassOpen] = useState(false);
+  const [newPassInput, setNewPassInput] = useState("");
+
   useEffect(() => {
     // Check local session
     const storedAuth = localStorage.getItem("vexora-admin-authed");
+    const savedPass = localStorage.getItem("vexora-admin-password");
+    setRegisteredPassword(savedPass);
     if (storedAuth === REQUIRED_ADMIN_EMAIL) {
       setIsAuthenticated(true);
       setAdminEmail(REQUIRED_ADMIN_EMAIL);
@@ -88,18 +96,39 @@ export function AdminPanel() {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginInput.trim().toLowerCase() === REQUIRED_ADMIN_EMAIL.toLowerCase()) {
-      setIsAuthenticated(true);
-      setAdminEmail(REQUIRED_ADMIN_EMAIL);
-      localStorage.setItem("vexora-admin-authed", REQUIRED_ADMIN_EMAIL);
-      toast.success("Acceso concedido al Centro de Control Vexora", {
-        description: `Autenticado como ${REQUIRED_ADMIN_EMAIL}`,
-      });
-    } else {
+    if (loginInput.trim().toLowerCase() !== REQUIRED_ADMIN_EMAIL.toLowerCase()) {
       toast.error("Acceso Denegado", {
         description: `Únicamente la cuenta ${REQUIRED_ADMIN_EMAIL} tiene privilegios de administración.`,
       });
+      return;
     }
+
+    if (!registeredPassword) {
+      // First time password registration!
+      if (!passwordInput || passwordInput.length < 4) {
+        toast.error("Elige una contraseña de al menos 4 caracteres.");
+        return;
+      }
+      localStorage.setItem("vexora-admin-password", passwordInput);
+      setRegisteredPassword(passwordInput);
+      setIsAuthenticated(true);
+      setAdminEmail(REQUIRED_ADMIN_EMAIL);
+      localStorage.setItem("vexora-admin-authed", REQUIRED_ADMIN_EMAIL);
+      toast.success("¡Contraseña de Administrador registrada y acceso concedido!");
+      return;
+    }
+
+    if (passwordInput !== registeredPassword) {
+      toast.error("Contraseña Incorrecta", {
+        description: "Ingresa la contraseña que definiste al registrarte.",
+      });
+      return;
+    }
+
+    setIsAuthenticated(true);
+    setAdminEmail(REQUIRED_ADMIN_EMAIL);
+    localStorage.setItem("vexora-admin-authed", REQUIRED_ADMIN_EMAIL);
+    toast.success("Acceso concedido al Centro de Control Vexora");
   };
 
   const handleAdminLogout = () => {
@@ -211,11 +240,26 @@ export function AdminPanel() {
                 className="min-h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white font-mono outline-none focus:border-[#c084fc] focus:ring-2 focus:ring-[#c084fc]/20"
               />
             </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold text-slate-300">
+                {registeredPassword ? "Contraseña de Administrador" : "Crea tu Contraseña de Administrador"}
+              </span>
+              <input
+                type="password"
+                required
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder={registeredPassword ? "••••••••" : "Define una contraseña segura"}
+                className="min-h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white font-mono outline-none focus:border-[#c084fc] focus:ring-2 focus:ring-[#c084fc]/20"
+              />
+            </label>
+
             <button
               type="submit"
               className="min-h-12 w-full rounded-full bg-gradient-to-r from-[#8b5cf6] via-[#a855f7] to-[#c084fc] font-semibold text-xs text-white shadow-lg transition hover:brightness-110"
             >
-              Autenticar e Ingresar al Centro de Control
+              {registeredPassword ? "Autenticar e Ingresar al Centro de Control" : "Registrar Contraseña e Ingresar"}
             </button>
           </form>
 
