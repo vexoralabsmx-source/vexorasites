@@ -1,10 +1,10 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "framework": null,
+  "outputDirectory": "dist/client",
+  "framework": "vite",
   "rewrites": [
     {
-      "source": "/((?!api/|_next/|favicon.svg|og.png).*)",
+      "source": "/((?!assets/|favicon.svg|og.png|file.svg|globe.svg|window.svg).*)",
       "destination": "/index.html"
     }
   ]
