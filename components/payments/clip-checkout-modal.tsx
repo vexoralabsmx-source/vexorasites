@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard, ShieldCheck, Sparkles, X, Check, ExternalLink, LoaderCircle } from "lucide-react";
+import { CreditCard, ShieldCheck, Sparkles, X, Check, ExternalLink, LoaderCircle, KeyRound, Ticket } from "lucide-react";
 import { toast } from "sonner";
+import { redeemLicenseOrCoupon, validateLicenseOrCoupon, type LicenseKey } from "@/lib/licenses";
 
 export function ClipCheckoutModal({
   isOpen,
@@ -16,6 +17,8 @@ export function ClipCheckoutModal({
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [email, setEmail] = useState("usuario@vexora.site");
   const [customApiKey, setCustomApiKey] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<LicenseKey | null>(null);
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -26,15 +29,51 @@ export function ClipCheckoutModal({
     Enterprise: { price: 199, desc: "Infraestructura dedicada, SSO, SLA prioritario" },
   };
 
+  const basePrice = planPrices[selectedPlan]?.price ?? 29;
+  const finalPrice = appliedCoupon
+    ? Math.max(0, Math.round(basePrice * (1 - appliedCoupon.discountPercent / 100)))
+    : basePrice;
+
+  const handleApplyCoupon = () => {
+    if (!couponCode.trim()) {
+      toast.error("Ingresa un código de llave o cupón.");
+      return;
+    }
+    const result = validateLicenseOrCoupon(couponCode);
+    if (!result.valid || !result.item) {
+      toast.error(result.message || "Código no válido.");
+      return;
+    }
+    setAppliedCoupon(result.item);
+    toast.success("¡Código Canjeado Exitosamente!", {
+      description: result.item.discountPercent === 100
+        ? "Membresía 100% Gratuita Activada"
+        : `${result.item.discountPercent}% de descuento aplicado`,
+    });
+  };
+
   const handleCheckout = async () => {
     setLoading(true);
+
+    if (appliedCoupon && finalPrice === 0) {
+      redeemLicenseOrCoupon(appliedCoupon.code);
+      setTimeout(() => {
+        toast.success("¡Plan Pro/Studio Activado Gratuitamente!", {
+          description: `Gracias a tu llave ${appliedCoupon.code}.`,
+        });
+        setLoading(false);
+        onClose();
+      }, 700);
+      return;
+    }
+
     try {
       const response = await fetch("/api/clip/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           plan: selectedPlan.toLowerCase(),
-          price: planPrices[selectedPlan]?.price ?? 29,
+          price: finalPrice,
           email,
           apiKey: customApiKey || undefined,
         }),
@@ -51,8 +90,12 @@ export function ClipCheckoutModal({
         throw new Error(data.error || "No se pudo generar el enlace de pago con Clip.");
       }
 
+      if (appliedCoupon) {
+        redeemLicenseOrCoupon(appliedCoupon.code);
+      }
+
       toast.success("Redirigiendo a pasarela de pago Clip...", {
-        description: `Plan ${selectedPlan} — $${planPrices[selectedPlan]?.price} USD / mes`,
+        description: `Plan ${selectedPlan} — $${finalPrice} USD / mes`,
       });
 
       setTimeout(() => {
@@ -90,12 +133,12 @@ export function ClipCheckoutModal({
           </div>
         </div>
 
-        <p className="mt-4 text-sm text-slate-300 leading-relaxed">
+        <p className="mt-3 text-xs text-slate-300 leading-relaxed">
           Paga de forma segura con tarjeta de crédito, débito o transferencia SPEI a través de la API oficial de Clip.
         </p>
 
         {/* Plan Selector */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {["Studio", "Scale", "Enterprise"].map((plan) => (
             <button
               key={plan}
@@ -116,62 +159,81 @@ export function ClipCheckoutModal({
           ))}
         </div>
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-5 space-y-3">
           <label className="block">
-            <span className="mb-1.5 block text-xs font-semibold text-slate-300">
+            <span className="mb-1 block text-xs font-semibold text-slate-300">
               Correo de la cuenta
             </span>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="min-h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none focus:border-[#c084fc] focus:ring-2 focus:ring-[#c084fc]/20"
+              className="min-h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 text-xs text-white outline-none focus:border-[#c084fc]"
               placeholder="tu@correo.com"
             />
           </label>
 
-          <label className="block">
-            <div className="flex justify-between items-center mb-1.5">
-              <span className="text-xs font-semibold text-slate-300">
-                Clip Secret API Token (Opcional)
-              </span>
-              <span className="text-[10px] text-slate-500">api-key / secret-key</span>
+          {/* COUPON & LICENSE KEY REDEMPTION FIELD */}
+          <div>
+            <span className="mb-1 block text-xs font-semibold text-slate-300 flex items-center justify-between">
+              <span>¿Tienes una llave o cupón de descuento?</span>
+              {appliedCoupon && (
+                <span className="text-[10px] text-emerald-300 font-bold">
+                  ✓ {appliedCoupon.discountPercent}% OFF Aplicado
+                </span>
+              )}
+            </span>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder="ej. VEXORA-VIP-FREE o VEXORA1MONTH"
+                className="min-h-11 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 font-mono text-xs text-white outline-none focus:border-[#c084fc]"
+              />
+              <button
+                type="button"
+                onClick={handleApplyCoupon}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-purple-500/40 bg-purple-600/20 px-4 text-xs font-semibold text-white hover:bg-purple-600/30 transition shrink-0"
+              >
+                <Ticket size={14} className="text-[#c084fc]" /> Aplicar
+              </button>
             </div>
-            <input
-              type="password"
-              value={customApiKey}
-              onChange={(e) => setCustomApiKey(e.target.value)}
-              className="min-h-12 w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 font-mono text-sm text-white outline-none focus:border-[#c084fc] focus:ring-2 focus:ring-[#c084fc]/20"
-              placeholder="Env de producción o ingresar token de Clip..."
-            />
-          </label>
+          </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-purple-500/20 bg-purple-500/10 p-4 text-xs text-slate-300 flex items-center gap-3">
-          <ShieldCheck size={20} className="text-[#c084fc] shrink-0" />
-          <span>
-            Procesado con encriptación SSL de 256 bits mediante PayClip. Tu membresía activa inmediatamente.
-          </span>
+        {/* PRICE SUMMARY */}
+        <div className="mt-5 rounded-2xl border border-purple-500/20 bg-purple-500/10 p-4 text-xs text-slate-300 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ShieldCheck size={20} className="text-[#c084fc] shrink-0" />
+            <div>
+              <p className="font-semibold text-white">
+                Total a pagar: <span className="text-[#c084fc] font-bold text-sm">${finalPrice} USD</span>
+                {appliedCoupon && <span className="line-through text-slate-500 ml-2">${basePrice} USD</span>}
+              </p>
+              <p className="text-[10px] text-slate-400">Procesado con encriptación SSL de 256 bits mediante Clip.</p>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-7 flex items-center justify-between border-t border-white/10 pt-5">
-          <button
-            onClick={onClose}
-            className="text-xs text-slate-400 hover:text-white font-medium"
-          >
+        <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
+          <button onClick={onClose} className="text-xs text-slate-400 hover:text-white font-medium">
             Cancelar
           </button>
           <button
             onClick={handleCheckout}
             disabled={loading}
-            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-gradient-to-r from-[#8b5cf6] via-[#a855f7] to-[#c084fc] px-7 font-semibold text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
+            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-gradient-to-r from-[#8b5cf6] via-[#a855f7] to-[#c084fc] px-7 font-semibold text-xs text-white shadow-lg transition hover:brightness-110 disabled:opacity-50"
           >
             {loading ? (
               <LoaderCircle className="animate-spin" size={18} />
+            ) : finalPrice === 0 ? (
+              <>
+                Activar Plan Gratis Ahora <KeyRound size={16} />
+              </>
             ) : (
               <>
-                Pagar con Clip (${planPrices[selectedPlan]?.price} USD)
-                <ExternalLink size={16} />
+                Pagar con Clip (${finalPrice} USD) <ExternalLink size={16} />
               </>
             )}
           </button>
