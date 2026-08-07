@@ -68,8 +68,9 @@ export const metadata: Metadata = {
     images: ["/og.png"],
   },
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: "https://res.cloudinary.com/khxvbeau/image/upload/v1785467555/vexoralabslogo_hy554s.png",
+    shortcut: "https://res.cloudinary.com/khxvbeau/image/upload/v1785467555/vexoralabslogo_hy554s.png",
+    apple: "https://res.cloudinary.com/khxvbeau/image/upload/v1785467555/vexoralabslogo_hy554s.png",
   },
 };
 

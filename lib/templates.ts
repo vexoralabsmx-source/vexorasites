@@ -1,25 +1,534 @@
 import type { SiteSchema, SiteSection, TemplateDefinition } from "@/types/site";
 
-const section = (id: string, type: SiteSection["type"], title: string, body: string, bg: string, fg: string, accent: string, preset: SiteSection["animation"]["preset"] = "fade-up", align: "left" | "center" = "left", items?: SiteSection["content"]["items"]): SiteSection => ({
-  id, type, variant: `${type}-01`, content: { eyebrow: type === "hero" ? "Nueva colección" : undefined, title, body, cta: type === "hero" || type === "cta" ? "Descubrir más" : undefined, items }, styles: { background: bg, foreground: fg, accent, align, padding: 104 }, responsive: { hideMobile: false, mobilePadding: 48 }, animation: { preset, intensity: 55, scrub: preset === "parallax" }, locked: false,
+const section = (
+  id: string,
+  type: SiteSection["type"],
+  title: string,
+  body: string,
+  bg: string,
+  fg: string,
+  accent: string,
+  preset: SiteSection["animation"]["preset"] = "fade-up",
+  align: "left" | "center" = "left",
+  items?: SiteSection["content"]["items"],
+  eyebrow?: string
+): SiteSection => ({
+  id,
+  type,
+  variant: `${type}-01`,
+  content: {
+    eyebrow: eyebrow ?? (type === "hero" ? "Diseño Cinematográfico Vexora" : undefined),
+    title,
+    body,
+    cta: type === "hero" || type === "cta" ? "Descubrir más" : undefined,
+    items,
+  },
+  styles: { background: bg, foreground: fg, accent, align, padding: 104 },
+  responsive: { hideMobile: false, mobilePadding: 48 },
+  animation: { preset, intensity: 55, scrub: preset === "parallax" },
+  locked: false,
 });
 
-const makeSite = (id: string, name: string, palette: [string, string, string], sections: SiteSection[]): SiteSchema => ({ site: { id: `demo-${id}`, name, slug: id, description: name, templateId: id, status: "draft", theme: { colors: { background: palette[0], foreground: palette[1], accent: palette[2] }, radius: 18 } }, pages: [
-  { id: `${id}-home`, name: "Inicio", slug: "", sections },
-  { id: `${id}-services`, name: "Servicios", slug: "servicios", sections: [section(`${id}-sv-1`, "services", "Capacidades construidas para avanzar.", `Un sistema de servicios diseñado alrededor de ${name}.`, palette[0], palette[1], palette[2], "fade-up", "left", [{ title: "Estrategia", text: "Claridad, prioridades y una dirección compartida." }, { title: "Experiencia", text: "Cada interacción acompaña un objetivo real." }, { title: "Ejecución", text: "Una base preparada para operar y crecer." }]), section(`${id}-sv-2`, "cta", "Construyamos la siguiente etapa.", "Una conversación clara puede convertirse en un sistema completo.", palette[2], palette[0], palette[0], "zoom-reveal", "center")] },
-  { id: `${id}-about`, name: "Nosotros", slug: "nosotros", sections: [section(`${id}-ab-1`, "story", "La intención viene antes que el efecto.", `En ${name} combinamos criterio, oficio y una obsesión por los detalles que sí importan.`, palette[1], palette[0], palette[2], "slide-left"), section(`${id}-ab-2`, "contact", "Hagamos algo difícil de ignorar.", "Cuéntanos el reto y definamos el siguiente movimiento.", palette[0], palette[1], palette[2], "blur-reveal", "center")] },
-] });
+const makeSite = (
+  id: string,
+  name: string,
+  palette: [string, string, string],
+  sections: SiteSection[]
+): SiteSchema => ({
+  site: {
+    id: `demo-${id}`,
+    name,
+    slug: id,
+    description: name,
+    templateId: id,
+    status: "draft",
+    theme: {
+      colors: { background: palette[0], foreground: palette[1], accent: palette[2] },
+      radius: 18,
+    },
+  },
+  pages: [
+    { id: `${id}-home`, name: "Inicio", slug: "", sections },
+    {
+      id: `${id}-services`,
+      name: "Servicios",
+      slug: "servicios",
+      sections: [
+        section(
+          `${id}-sv-1`,
+          "services",
+          "Capacidades diseñadas para impactar.",
+          `Un sistema integral alrededor de la visión de ${name}.`,
+          palette[0],
+          palette[1],
+          palette[2],
+          "fade-up",
+          "left",
+          [
+            { title: "Estrategia de Marca", text: "Claridad narrativa, visión de mercado y posicionamiento." },
+            { title: "Experiencia Digital", text: "Interfaces fluidas creadas para convertir en cada interacción." },
+            { title: "Ejecución de Alto Rendimiento", text: "Tecnología robusta y escalable lista para crecer." },
+          ]
+        ),
+        section(
+          `${id}-sv-2`,
+          "cta",
+          "¿Listo para crear algo extraordinario?",
+          "Comienza a construir tu nueva presencia digital hoy.",
+          palette[2],
+          palette[0],
+          palette[0],
+          "zoom-reveal",
+          "center"
+        ),
+      ],
+    },
+    {
+      id: `${id}-about`,
+      name: "Nosotros",
+      slug: "nosotros",
+      sections: [
+        section(
+          `${id}-ab-1`,
+          "story",
+          "La intención define el resultado.",
+          `En ${name} combinamos criterio creativo, dirección de arte y tecnología de vanguardia.`,
+          palette[1],
+          palette[0],
+          palette[2],
+          "slide-left"
+        ),
+        section(
+          `${id}-ab-2`,
+          "contact",
+          "Transforma tu idea en realidad.",
+          "Escríbenos para agendar una sesión inicial de trabajo.",
+          palette[0],
+          palette[1],
+          palette[2],
+          "blur-reveal",
+          "center"
+        ),
+      ],
+    },
+  ],
+});
 
 export const templates: TemplateDefinition[] = [
-  { id: "noir-atelier", name: "Noir Atelier", category: "Moda", description: "Editorial, silenciosa y magnética.", palette: ["#0d0b0d", "#f4eee8", "#d8b4a0"], premium: true, schema: makeSite("noir-atelier", "Noir Atelier", ["#0d0b0d", "#f4eee8", "#d8b4a0"], [section("na-1", "hero", "Vestir es construir una presencia.", "Piezas de edición limitada, trazadas entre arquitectura y movimiento.", "#0d0b0d", "#f4eee8", "#d8b4a0", "blur-reveal"), section("na-2", "gallery", "Formas que permanecen", "Una colección construida en capas, textura y pausa.", "#e8dfd6", "#181318", "#8d493a", "parallax", "center"), section("na-3", "cta", "La nueva edición ya está disponible.", "Explora el lookbook completo.", "#8d493a", "#fffaf5", "#f1c6a8", "zoom-reveal", "center")]) },
-  { id: "ritual-barber", name: "Ritual 77", category: "Barbería", description: "Oscura, precisa y con carácter.", palette: ["#10100f", "#ece7da", "#c79a45"], premium: false, schema: makeSite("ritual-barber", "Ritual 77", ["#10100f", "#ece7da", "#c79a45"], [section("rb-1", "hero", "El oficio de verte impecable.", "Cortes de autor, rituales de barba y una hora que es solo tuya.", "#10100f", "#ece7da", "#c79a45", "slide-left"), section("rb-2", "services", "Rituales de la casa", "Precisión clásica con lenguaje contemporáneo.", "#1b1a17", "#ece7da", "#c79a45", "fade-up", "left", [{ title: "Corte Signature", text: "Diagnóstico, corte y styling." }, { title: "Barba Ritual", text: "Toalla caliente y perfilado." }, { title: "Reset", text: "La experiencia completa." }]), section("rb-3", "cta", "Tu silla te espera.", "Reserva en menos de un minuto.", "#c79a45", "#11100e", "#11100e", "zoom-reveal", "center")]) },
-  { id: "mesa-nueve", name: "Mesa Nueve", category: "Restaurante", description: "Narrativa gastronómica editorial.", palette: ["#f0e8d8", "#251e18", "#ad3f27"], premium: false, schema: makeSite("mesa-nueve", "Mesa Nueve", ["#f0e8d8", "#251e18", "#ad3f27"], [section("mn-1", "hero", "Fuego, estación y territorio.", "Una cocina mexicana contemporánea que empieza en el mercado y termina en la memoria.", "#f0e8d8", "#251e18", "#ad3f27", "fade-up"), section("mn-2", "story", "Cada plato tiene un origen.", "Trabajamos con pequeños productores y una carta que cambia con la tierra.", "#ad3f27", "#fff7ea", "#f6c5a7", "parallax"), section("mn-3", "testimonial", "“Una cena que se siente como una conversación larga.”", "— Cuaderno Gastronómico", "#251e18", "#f0e8d8", "#ad3f27", "blur-reveal", "center")]) },
-  { id: "orbital-labs", name: "Orbital Labs", category: "Agencia", description: "Tecnología con ritmo y profundidad.", palette: ["#070b16", "#eff4ff", "#6c6cff"], premium: true, schema: makeSite("orbital-labs", "Orbital Labs", ["#070b16", "#eff4ff", "#6c6cff"], [section("ol-1", "hero", "Creamos productos para la próxima órbita.", "Estrategia, diseño y tecnología para compañías que no quieren parecerse a ayer.", "#070b16", "#eff4ff", "#6c6cff", "zoom-reveal"), section("ol-2", "stats", "Impacto que se puede medir", "Sistemas digitales pensados para crecer.", "#101832", "#eff4ff", "#5de4c7", "fade-up", "left", [{ title: "43%", text: "más conversión" }, { title: "2.4×", text: "más velocidad" }, { title: "18", text: "mercados activos" }]), section("ol-3", "services", "De la señal al sistema", "Un equipo senior integrado a tu negocio.", "#eff4ff", "#0a1020", "#6c6cff", "slide-left", "left", [{ title: "Strategy", text: "Claridad antes de construir." }, { title: "Experience", text: "Interfaces con intención." }, { title: "Engineering", text: "Tecnología lista para escalar." }])]) },
-  { id: "forge-athletic", name: "Forge Athletic", category: "Gimnasio", description: "Energía cinematográfica sin ruido.", palette: ["#0b0b0b", "#f2f0e9", "#ff4d27"], premium: true, schema: makeSite("forge-athletic", "Forge Athletic", ["#0b0b0b", "#f2f0e9", "#ff4d27"], [section("fa-1", "hero", "No entrenas para volver igual.", "Fuerza, movilidad y comunidad en sesiones que transforman tu ritmo.", "#0b0b0b", "#f2f0e9", "#ff4d27", "blur-reveal"), section("fa-2", "stats", "Consistencia sobre intensidad.", "Un método diseñado para durar.", "#ff4d27", "#110e0d", "#110e0d", "zoom-reveal", "left", [{ title: "45 min", text: "por sesión" }, { title: "6:1", text: "ratio de coach" }, { title: "30 días", text: "para sentir el cambio" }]), section("fa-3", "cta", "Tu primera sesión corre por nosotros.", "Ven a conocer el método Forge.", "#f2f0e9", "#101010", "#ff4d27", "slide-left", "center")]) },
-  { id: "mara-visual", name: "Mara Visual", category: "Portafolio", description: "Experimental, artístico y adaptable.", palette: ["#e9ff55", "#151515", "#7559ff"], premium: false, schema: makeSite("mara-visual", "Mara Visual", ["#e9ff55", "#151515", "#7559ff"], [section("mv-1", "hero", "Imágenes para ideas que todavía no tienen nombre.", "Dirección de arte y fotografía entre Ciudad de México y cualquier parte.", "#e9ff55", "#151515", "#7559ff", "slide-left"), section("mv-2", "gallery", "Selected / 2026", "Identidades, campañas y mundos visuales.", "#7559ff", "#fff", "#e9ff55", "parallax"), section("mv-3", "contact", "Hagamos algo difícil de olvidar.", "Disponible para colaboraciones y proyectos selectos.", "#151515", "#f7f7f2", "#e9ff55", "blur-reveal", "center")]) },
-  { id: "apex-capital", name: "Apex Capital", category: "Finanzas", description: "Precisión institucional con una presencia global.", palette: ["#07110f", "#effff8", "#53e3a6"], premium: true, schema: makeSite("apex-capital", "Apex Capital", ["#07110f", "#effff8", "#53e3a6"], [section("ac-1", "hero", "Capital para construir lo que sigue.", "Invertimos en infraestructura, software y compañías que definen nuevos mercados.", "#07110f", "#effff8", "#53e3a6", "blur-reveal"), section("ac-2", "stats", "Convicción respaldada por resultados.", "Una plataforma internacional con disciplina de largo plazo.", "#0d211c", "#effff8", "#53e3a6", "fade-up", "left", [{ title: "$4.8B", text: "activos gestionados" }, { title: "29", text: "compañías activas" }, { title: "11", text: "mercados" }]), section("ac-3", "cta", "El futuro necesita socios pacientes.", "Conoce nuestra tesis de inversión.", "#53e3a6", "#07110f", "#07110f", "zoom-reveal", "center")]) },
-  { id: "serein-residences", name: "Serein Residences", category: "Real Estate", description: "Arquitectura editorial para propiedades excepcionales.", palette: ["#e8e1d5", "#1b211d", "#8a6d49"], premium: true, schema: makeSite("serein-residences", "Serein Residences", ["#e8e1d5", "#1b211d", "#8a6d49"], [section("sr-1", "hero", "Una forma más silenciosa de vivir bien.", "Residencias concebidas alrededor de la luz, la materia y el tiempo.", "#e8e1d5", "#1b211d", "#8a6d49", "fade-up"), section("sr-2", "gallery", "Espacios que respiran.", "Una colección limitada entre ciudad, paisaje y arquitectura.", "#1b211d", "#f6efe5", "#b99a70", "parallax", "center"), section("sr-3", "testimonial", "“La verdadera exclusividad es tener espacio para sentir.”", "— Serein manifesto", "#8a6d49", "#fffaf2", "#1b211d", "blur-reveal", "center")]) },
-  { id: "monolith-ai", name: "Monolith AI", category: "SaaS", description: "Producto tecnológico con claridad y escala visual.", palette: ["#090a10", "#f5f7ff", "#9d7cff"], premium: true, schema: makeSite("monolith-ai", "Monolith AI", ["#090a10", "#f5f7ff", "#9d7cff"], [section("ma-1", "hero", "Inteligencia para decisiones que no pueden esperar.", "Convierte señales dispersas en acciones precisas para toda tu organización.", "#090a10", "#f5f7ff", "#9d7cff", "zoom-reveal"), section("ma-2", "services", "De datos a dirección.", "Un sistema operativo para equipos ambiciosos.", "#111529", "#f5f7ff", "#77e6c6", "slide-left", "left", [{ title: "Observe", text: "Conecta información crítica." }, { title: "Reason", text: "Encuentra patrones y prioridades." }, { title: "Act", text: "Automatiza decisiones con control." }]), section("ma-3", "stats", "Menos ruido. Más movimiento.", "Impacto medible desde el primer flujo.", "#f5f7ff", "#0b0e17", "#7655ff", "fade-up", "left", [{ title: "73%", text: "menos trabajo manual" }, { title: "4.2×", text: "más velocidad" }, { title: "99.9%", text: "disponibilidad" }])]) },
+  // 0. PLANTILLA EN BLANCO (BLANK CANVAS)
+  {
+    id: "blank-canvas",
+    name: "Lienzo en Blanco",
+    category: "General",
+    description: "Comienza desde cero con una estructura limpia y sin restricciones.",
+    palette: ["#050508", "#f8fafc", "#8b5cf6"],
+    premium: false,
+    schema: makeSite("blank-canvas", "Mi Proyecto Vexora", ["#050508", "#f8fafc", "#8b5cf6"], [
+      section(
+        "blank-1",
+        "hero",
+        "Diseña tu sitio desde cero.",
+        "Añade bloques, ajusta estilos y crea una experiencia única.",
+        "#050508",
+        "#f8fafc",
+        "#8b5cf6",
+        "fade-up",
+        "center",
+        undefined,
+        "Lienzo Inicial"
+      ),
+    ]),
+  },
+  // 1. NOIR ATELIER
+  {
+    id: "noir-atelier",
+    name: "Noir Atelier",
+    category: "Moda",
+    description: "Editorial, silenciosa, minimalista y magnética.",
+    palette: ["#0d0b0d", "#f4eee8", "#c084fc"],
+    premium: true,
+    schema: makeSite("noir-atelier", "Noir Atelier", ["#0d0b0d", "#f4eee8", "#c084fc"], [
+      section(
+        "na-1",
+        "hero",
+        "Vestir es construir una presencia.",
+        "Piezas de edición limitada, trazadas entre arquitectura, movimiento y alta costura.",
+        "#0d0b0d",
+        "#f4eee8",
+        "#c084fc",
+        "blur-reveal",
+        "left",
+        undefined,
+        "Colección Otoño / Invierno"
+      ),
+      section(
+        "na-2",
+        "story",
+        "Texturas que permanecen en el tiempo.",
+        "Cada prenda se confecciona artesanalmente con fibras orgánicas y patrones esculpidos.",
+        "#171217",
+        "#f4eee8",
+        "#a78bfa",
+        "parallax",
+        "center"
+      ),
+      section(
+        "na-3",
+        "cta",
+        "La nueva colección ya está disponible.",
+        "Reserva una cita privada en nuestro showroom o explora el catálogo en línea.",
+        "#1e1b4b",
+        "#ffffff",
+        "#c084fc",
+        "zoom-reveal",
+        "center"
+      ),
+    ]),
+  },
+  // 2. RITUAL BARBER
+  {
+    id: "ritual-barber",
+    name: "Ritual 77",
+    category: "Barbería",
+    description: "Oscura, precisa, masculina y con carácter.",
+    palette: ["#0a0812", "#f1e8dc", "#a78bfa"],
+    premium: false,
+    schema: makeSite("ritual-barber", "Ritual 77", ["#0a0812", "#f1e8dc", "#a78bfa"], [
+      section(
+        "rb-1",
+        "hero",
+        "El arte de la precisión y el estilo.",
+        "Cortes de autor, tratamiento de toalla caliente y una experiencia exclusiva diseñada para ti.",
+        "#0a0812",
+        "#f1e8dc",
+        "#a78bfa",
+        "slide-left",
+        "left",
+        undefined,
+        "Barbería & Grooming Club"
+      ),
+      section(
+        "rb-2",
+        "services",
+        "Nuestros Servicios Signature",
+        "Tradición artesanal combinada con lenguaje contemporáneo.",
+        "#110c22",
+        "#f1e8dc",
+        "#c084fc",
+        "fade-up",
+        "left",
+        [
+          { title: "Corte Signature", text: "Diagnóstico capilar, lavado orgánico y perfilado con navaja." },
+          { title: "Barba Ritual", text: "Toalla caliente, aceite botánico y esculpido a detalle." },
+          { title: "Experiencia Total", text: "La combinación completa de corte, barba y facial revitalizante." },
+        ]
+      ),
+      section(
+        "rb-3",
+        "cta",
+        "Reserva tu asiento en Ritual 77.",
+        "Agenda tu cita en menos de 60 segundos.",
+        "#1e1b4b",
+        "#ffffff",
+        "#a78bfa",
+        "zoom-reveal",
+        "center"
+      ),
+    ]),
+  },
+  // 3. MESA NUEVE
+  {
+    id: "mesa-nueve",
+    name: "Mesa Nueve",
+    category: "Restaurante",
+    description: "Narrativa gastronómica editorial e inmersiva.",
+    palette: ["#07050e", "#f7f0e6", "#c084fc"],
+    premium: false,
+    schema: makeSite("mesa-nueve", "Mesa Nueve", ["#07050e", "#f7f0e6", "#c084fc"], [
+      section(
+        "mn-1",
+        "hero",
+        "Fuego, estación y memoria.",
+        "Una propuesta gastronómica contemporánea nacida del respeto al ingrediente de origen.",
+        "#07050e",
+        "#f7f0e6",
+        "#c084fc",
+        "fade-up",
+        "left",
+        undefined,
+        "Cocina de Autor"
+      ),
+      section(
+        "mn-2",
+        "story",
+        "Cada platillo cuenta una historia de la tierra.",
+        "Colaboramos directamente con agricultores y pescadores locales para ofrecer ingredientes frescos cada mañana.",
+        "#120d24",
+        "#ffffff",
+        "#a78bfa",
+        "parallax"
+      ),
+      section(
+        "mn-3",
+        "testimonial",
+        "“Una experiencia gastronómica que se queda en la memoria.”",
+        "— Crítica Gastronómica Internacional",
+        "#07050e",
+        "#f7f0e6",
+        "#c084fc",
+        "blur-reveal",
+        "center"
+      ),
+    ]),
+  },
+  // 4. ORBITAL LABS
+  {
+    id: "orbital-labs",
+    name: "Orbital Studio",
+    category: "Agencia",
+    description: "Tecnología, producto y profundidad visual.",
+    palette: ["#050508", "#f8fafc", "#8b5cf6"],
+    premium: true,
+    schema: makeSite("orbital-labs", "Orbital Studio", ["#050508", "#f8fafc", "#8b5cf6"], [
+      section(
+        "ol-1",
+        "hero",
+        "Creamos productos digitales inolvidables.",
+        "Estrategia, diseño y desarrollo web para marcas que lideran su industria.",
+        "#050508",
+        "#f8fafc",
+        "#8b5cf6",
+        "zoom-reveal",
+        "left",
+        undefined,
+        "Estudio Digital Global"
+      ),
+      section(
+        "ol-2",
+        "stats",
+        "Resultados comprobados que escalan",
+        "Metodología probada para potenciar el crecimiento digital.",
+        "#0c0818",
+        "#f8fafc",
+        "#c084fc",
+        "fade-up",
+        "left",
+        [
+          { title: "+180%", text: "Incremento en tasa de conversión" },
+          { title: "2.4×", text: "Velocidad de carga mejorada" },
+          { title: "32", text: "Premios internacionales de diseño" },
+        ]
+      ),
+      section(
+        "ol-3",
+        "services",
+        "Nuestras Áreas de Dominio",
+        "Equipos multidisciplinarios integrados en tu negocio.",
+        "#050508",
+        "#f8fafc",
+        "#a78bfa",
+        "slide-left",
+        "left",
+        [
+          { title: "Brand Strategy", text: "Claridad conceptual antes de escribir una sola línea de código." },
+          { title: "UI/UX Design", text: "Interfaces fluidas, intuitivas y con estética cinematográfica." },
+          { title: "Next.js Engineering", text: "Arquitectura frontend ultrarrápida optimizada para motores de búsqueda." },
+        ]
+      ),
+    ]),
+  },
+  // 5. FORGE ATHLETIC
+  {
+    id: "forge-athletic",
+    name: "Forge Athletic",
+    category: "Gimnasio",
+    description: "Energía cinematográfica, rendimiento y actitud.",
+    palette: ["#090614", "#f2f0e9", "#c084fc"],
+    premium: true,
+    schema: makeSite("forge-athletic", "Forge Athletic", ["#090614", "#f2f0e9", "#c084fc"], [
+      section(
+        "fa-1",
+        "hero",
+        "Entrena para superar tus propios límites.",
+        "Fuerza, rendimiento y comunidad en un centro de alto nivel.",
+        "#090614",
+        "#f2f0e9",
+        "#c084fc",
+        "blur-reveal",
+        "left",
+        undefined,
+        "High Performance Training"
+      ),
+      section(
+        "fa-2",
+        "stats",
+        "Disciplina y constancia operacional",
+        "Un sistema diseñado para transformar tu rendimiento físico.",
+        "#140c2a",
+        "#f2f0e9",
+        "#a78bfa",
+        "zoom-reveal",
+        "left",
+        [
+          { title: "60 MIN", text: "Duración por sesión intensa" },
+          { title: "100%", text: "Coaching personalizado" },
+          { title: "30 DÍAS", text: "Garantía de resultados" },
+        ]
+      ),
+      section(
+        "fa-3",
+        "cta",
+        "Obtén tu pase de evaluación sin costo.",
+        "Ven a conocer nuestras instalaciones y prueba el sistema Forge.",
+        "#8b5cf6",
+        "#ffffff",
+        "#090614",
+        "slide-left",
+        "center"
+      ),
+    ]),
+  },
+  // 6. MARA VISUAL
+  {
+    id: "mara-visual",
+    name: "Mara Visual",
+    category: "Portafolio",
+    description: "Artístico, fotográfico, audaz y contemporáneo.",
+    palette: ["#050508", "#ffffff", "#c084fc"],
+    premium: false,
+    schema: makeSite("mara-visual", "Mara Visual", ["#050508", "#ffffff", "#c084fc"], [
+      section(
+        "mv-1",
+        "hero",
+        "Fotografía y dirección de arte vanguardista.",
+        "Capturando la esencia de marcas globales y campañas de moda.",
+        "#050508",
+        "#ffffff",
+        "#c084fc",
+        "slide-left",
+        "left",
+        undefined,
+        "Visual Studio & Art Direction"
+      ),
+      section(
+        "mv-2",
+        "gallery",
+        "Proyectos Destacados 2026",
+        "Selección de campañas editoriales y proyectos cinematográficos.",
+        "#0e091d",
+        "#ffffff",
+        "#a78bfa",
+        "parallax"
+      ),
+      section(
+        "mv-3",
+        "contact",
+        "Iniciemos una conversación creativa.",
+        "Disponible para comisiones internacionales y proyectos especiales.",
+        "#1e1b4b",
+        "#ffffff",
+        "#c084fc",
+        "blur-reveal",
+        "center"
+      ),
+    ]),
+  },
+  // 7. ZENITH WELLNESS (NUEVA)
+  {
+    id: "zenith-wellness",
+    name: "Zenith Longevity",
+    category: "Salud",
+    description: "Centro holístico de bienestar y medicina preventiva.",
+    palette: ["#080612", "#f7fafc", "#a78bfa"],
+    premium: true,
+    schema: makeSite("zenith-wellness", "Zenith Longevity", ["#080612", "#f7fafc", "#a78bfa"], [
+      section(
+        "zw-1",
+        "hero",
+        "Optimiza tu vitalidad y longevidad.",
+        "Medicina preventiva personalizada, terapias de regeneración y biohacking avanzado.",
+        "#080612",
+        "#f7fafc",
+        "#a78bfa",
+        "fade-up",
+        "left",
+        undefined,
+        "Wellness & Longevity Institute"
+      ),
+      section(
+        "zw-2",
+        "services",
+        "Nuestras Terapias Integrales",
+        "Tecnología médica de vanguardia al servicio de tu bienestar.",
+        "#110a24",
+        "#f7fafc",
+        "#c084fc",
+        "fade-up",
+        "left",
+        [
+          { title: "Optimización Hormonal", text: "Evaluación celular y protocolos de rejuvenecimiento." },
+          { title: "Crioterapia & Sauna Infrarrojo", text: "Recuperación muscular acelerada y desintoxicación." },
+          { title: "Nutrición Intravenosa", text: "Cocteles de vitaminas e hidratación de alta absorción." },
+        ]
+      ),
+      section(
+        "zw-3",
+        "cta",
+        "Agenda tu valoración inicial de salud.",
+        "Descubre tu edad biológica y diseña tu plan personalizado.",
+        "#1e1b4b",
+        "#ffffff",
+        "#c084fc",
+        "zoom-reveal",
+        "center"
+      ),
+    ]),
+  },
+  // 8. AETHER 3D STUDIO (NUEVA)
+  {
+    id: "aether-design",
+    name: "Aether Motion & VFX",
+    category: "Tecnología",
+    description: "Estudio de animación 3D, efectos visuales y render real.",
+    palette: ["#05040a", "#f8fafc", "#c084fc"],
+    premium: true,
+    schema: makeSite("aether-design", "Aether Motion & VFX", ["#05040a", "#f8fafc", "#c084fc"], [
+      section(
+        "ad-1",
+        "hero",
+        "Renders fotorrealistas y animación 3D.",
+        "Damos vida a conceptos hiperrealistas para arquitectura, producto y cinematografía.",
+        "#05040a",
+        "#f8fafc",
+        "#c084fc",
+        "zoom-reveal",
+        "left",
+        undefined,
+        "3D & VFX Studio"
+      ),
+      section(
+        "ad-2",
+        "story",
+        "Superando los límites del renderizado visual.",
+        "Utilizamos pipelines de render por GPU de última generación para crear experiencias inmersivas.",
+        "#120a26",
+        "#f8fafc",
+        "#a78bfa",
+        "parallax"
+      ),
+      section(
+        "ad-3",
+        "cta",
+        "¿Tienes una visión en 3D?",
+        "Hablemos sobre tu siguiente producción visual.",
+        "#8b5cf6",
+        "#ffffff",
+        "#05040a",
+        "blur-reveal",
+        "center"
+      ),
+    ]),
+  },
 ];
 
 export function cloneTemplate(templateId: string, name?: string): SiteSchema {

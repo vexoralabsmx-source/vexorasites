@@ -76,7 +76,7 @@ function starterSection(): SiteSection {
     styles: {
       background: "#0b0b11",
       foreground: "#f7f4ef",
-      accent: "#8b7cff",
+      accent: "#8b5cf6",
       align: "left",
       padding: 104,
     },
@@ -251,7 +251,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         styles: {
           background: "#11111a",
           foreground: "#f5f2ff",
-          accent: "#8b7cff",
+          accent: "#8b5cf6",
           align: "left",
           padding: 88,
         },

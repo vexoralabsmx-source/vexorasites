@@ -207,11 +207,22 @@ function ActionLink({
   style?: React.CSSProperties;
 }) {
   const target = href?.trim() || "#";
+  const isExternal = target.startsWith("http://") || target.startsWith("https://");
+
+  if (!isExternal && target !== "#") {
+    return (
+      <Link href={target} className={className} style={style}>
+        {label}
+        <ArrowUpRight size={18} />
+      </Link>
+    );
+  }
+
   return (
     <a
       href={target}
-      target={target.startsWith("http") ? "_blank" : undefined}
-      rel={target.startsWith("http") ? "noreferrer" : undefined}
+      target={isExternal ? "_blank" : undefined}
+      rel={isExternal ? "noreferrer" : undefined}
       className={className}
       style={style}
     >
@@ -264,7 +275,10 @@ function HeroBlock({ section }: { section: SiteSection }) {
           <ActionLink
             href={section.content.ctaHref}
             label={section.content.cta}
-            className="mt-9 inline-flex min-h-12 items-center gap-3 self-start rounded-full px-6 font-semibold text-current ring-1 ring-current/25 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2"
+            className={cn(
+              "mt-9 inline-flex min-h-12 items-center gap-3 rounded-full px-6 font-semibold text-current ring-1 ring-current/25 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2",
+              section.styles.align === "center" ? "self-center" : "self-start"
+            )}
             style={{ color: section.styles.accent }}
           />
         )}

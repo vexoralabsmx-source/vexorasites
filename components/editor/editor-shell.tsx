@@ -25,6 +25,7 @@ import {
   ArrowLeft,
   ArrowUp,
   Blocks,
+  Camera,
   Check,
   ChevronDown,
   CloudOff,
@@ -44,6 +45,9 @@ import {
   Plus,
   Redo2,
   Rocket,
+  Save,
+  Search,
+  Share2,
   Smartphone,
   Tablet,
   Type,
@@ -63,6 +67,8 @@ import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/stores/editor-store";
 import type { AnimationPreset, SiteSection } from "@/types/site";
 import { AdvancedEditorTools } from "@/components/editor/advanced-editor-tools";
+import { SeoModal } from "@/components/editor/seo-modal";
+import { SiteThumbnailGenerator } from "@/components/editor/site-thumbnail-generator";
 
 type SectionTypography = NonNullable<SiteSection["styles"]["typography"]>;
 type FontChoice = NonNullable<SectionTypography["headingFont"]>;
@@ -209,6 +215,8 @@ export function EditorShell({ projectId }: { projectId: string }) {
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [preview, setPreview] = useState(false);
+  const [seoModalOpen, setSeoModalOpen] = useState(false);
+  const [thumbnailModalOpen, setThumbnailModalOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const sensors = useSensors(
@@ -244,6 +252,23 @@ export function EditorShell({ projectId }: { projectId: string }) {
     },
     [projectId, remoteProject, schema],
   );
+
+  const handleManualSave = useCallback(async () => {
+    useEditorStore.setState({ saving: "saving" });
+    try {
+      await persist(true);
+      toast.success("Cambios guardados correctamente", {
+        description: "Se creó una versión guardada de tu sitio.",
+      });
+    } catch (error) {
+      useEditorStore.setState({
+        saving: navigator.onLine ? "error" : "offline",
+      });
+      toast.error(
+        error instanceof Error ? error.message : "Error al guardar los cambios.",
+      );
+    }
+  }, [persist]);
   useEffect(() => {
     const timer = window.setTimeout(async () => {
       const template = search.get("template");
@@ -529,21 +554,49 @@ export function EditorShell({ projectId }: { projectId: string }) {
           </button>
           <button
             onClick={() => setPreview(true)}
-            className="hidden min-h-10 items-center gap-2 rounded-lg px-3 text-xs font-semibold text-white/60 hover:bg-white/5 hover:text-white md:flex"
+            className="hidden min-h-10 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-semibold text-slate-300 hover:bg-white/10 hover:text-white md:flex transition"
           >
             <Eye size={16} />
             Vista previa
           </button>
           <button
+            onClick={() => setSeoModalOpen(true)}
+            className="hidden min-h-10 items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 text-xs font-semibold text-[#c084fc] hover:bg-purple-500/20 md:flex transition"
+            title="Optimizador SEO y Tarjetas OpenGraph"
+          >
+            <Search size={15} />
+            SEO & Social
+          </button>
+          <button
+            onClick={() => setThumbnailModalOpen(true)}
+            className="hidden min-h-10 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-semibold text-slate-300 hover:bg-white/10 hover:text-white lg:flex transition"
+            title="Generar captura miniatura del sitio"
+          >
+            <Camera size={15} />
+            Captura
+          </button>
+          <button
+            onClick={() => void handleManualSave()}
+            disabled={saving === "saving"}
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-purple-500/40 bg-purple-600/20 px-3.5 text-xs font-semibold text-white hover:bg-purple-600/30 transition shadow-sm disabled:opacity-50"
+          >
+            {saving === "saving" ? (
+              <LoaderCircle size={15} className="animate-spin text-[#c084fc]" />
+            ) : (
+              <Save size={15} className="text-[#c084fc]" />
+            )}
+            <span>{saving === "saving" ? "Guardando..." : "Guardar cambios"}</span>
+          </button>
+          <button
             onClick={() => void publish()}
             disabled={publishing}
-            className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-violet-500 px-3 text-xs font-semibold text-white hover:bg-violet-400 disabled:cursor-wait disabled:opacity-60"
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-[#8b5cf6] to-[#c084fc] px-4 text-xs font-semibold text-white hover:brightness-110 disabled:cursor-wait disabled:opacity-60 transition shadow-md"
           >
             {publishing ? (
               <LoaderCircle size={15} className="animate-spin" />
             ) : (
               <Rocket size={15} />
-            )}{" "}
+            )}
             {publishing ? "Publicando..." : "Publicar"}
           </button>
           <AdvancedEditorTools
@@ -1177,11 +1230,23 @@ export function EditorShell({ projectId }: { projectId: string }) {
                     </p>
                   </>
                 )}
-                <div className="border-t border-white/[.08] pt-4">
+                <div className="border-t border-white/10 pt-4 space-y-3">
+                  <button
+                    onClick={() => void handleManualSave()}
+                    disabled={saving === "saving"}
+                    className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#8b5cf6] to-[#c084fc] text-xs font-semibold text-white shadow-md hover:brightness-110 transition disabled:opacity-50"
+                  >
+                    {saving === "saving" ? (
+                      <LoaderCircle size={15} className="animate-spin" />
+                    ) : (
+                      <Save size={15} />
+                    )}
+                    <span>{saving === "saving" ? "Guardando..." : "Guardar cambios"}</span>
+                  </button>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => duplicate(selected.id)}
-                      className="grid min-h-12 place-items-center rounded-xl border border-white/[.08] text-white/40 hover:text-white"
+                      className="grid min-h-11 place-items-center rounded-xl border border-white/[.08] text-white/40 hover:text-white"
                       aria-label="Duplicar"
                     >
                       <Copy size={16} />
@@ -1191,7 +1256,7 @@ export function EditorShell({ projectId }: { projectId: string }) {
                         update(selected.id, { locked: !selected.locked })
                       }
                       className={cn(
-                        "grid min-h-12 place-items-center rounded-xl border border-white/[.08] text-white/40 hover:text-white",
+                        "grid min-h-11 place-items-center rounded-xl border border-white/[.08] text-white/40 hover:text-white",
                         selected.locked && "border-amber-400/30 text-amber-300",
                       )}
                       aria-label={selected.locked ? "Desbloquear" : "Bloquear"}
@@ -1200,7 +1265,7 @@ export function EditorShell({ projectId }: { projectId: string }) {
                     </button>
                     <button
                       onClick={() => remove(selected.id)}
-                      className="grid min-h-12 place-items-center rounded-xl border border-rose-400/15 text-rose-300/60 hover:bg-rose-400/10 hover:text-rose-300"
+                      className="grid min-h-11 place-items-center rounded-xl border border-rose-400/15 text-rose-300/60 hover:bg-rose-400/10 hover:text-rose-300"
                       aria-label="Eliminar"
                     >
                       <Trash2 size={16} />
@@ -1243,6 +1308,8 @@ export function EditorShell({ projectId }: { projectId: string }) {
           <SiteRenderer schema={schema} pageSlug={currentPage.slug} />
         </div>
       )}
+      <SeoModal isOpen={seoModalOpen} onClose={() => setSeoModalOpen(false)} />
+      <SiteThumbnailGenerator isOpen={thumbnailModalOpen} onClose={() => setThumbnailModalOpen(false)} />
     </main>
   );
 }

@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #08080b;
-  --foreground: #f7f4ef;
+  --background: #050508;
+  --foreground: #f8fafc;
+  --purple-primary: #8b5cf6;
+  --purple-accent: #a78bfa;
+  --purple-glow: #c084fc;
+  --purple-dark: #1e1b4b;
+  --purple-surface: #120d24;
 }
 
 @theme inline {
@@ -17,6 +22,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 * {
@@ -41,41 +47,60 @@ a {
   min-height: 44px;
 }
 ::selection {
-  background: #8b7cff;
-  color: white;
+  background: #8b5cf6;
+  color: #ffffff;
 }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #050508;
+}
+::-webkit-scrollbar-thumb {
+  background: #272738;
+  border-radius: 99px;
+  border: 2px solid #050508;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+}
+
 .editor-input {
   min-height: 44px;
   width: 100%;
   border-radius: 12px;
   border: 1px solid rgb(255 255 255 / 0.08);
-  background: rgb(255 255 255 / 0.025);
+  background: rgb(255 255 255 / 0.03);
   padding: 10px 12px;
   color: white;
   font-size: 12px;
   outline: none;
+  transition: all 0.2s ease;
 }
 .editor-input:focus {
-  border-color: #8b7cff;
-  box-shadow: 0 0 0 2px rgb(139 124 255 / 0.15);
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgb(167 139 250 / 0.2);
 }
 .editor-input option {
-  background: #15151b;
+  background: #120d24;
   color: white;
 }
 
 .vexora-editor {
-  --editor-surface: #111118;
-  --editor-surface-raised: #171720;
+  --editor-surface: #0f0a1c;
+  --editor-surface-raised: #18112b;
   --editor-border: rgb(255 255 255 / 0.09);
   --editor-muted: rgb(255 255 255 / 0.5);
   background:
     radial-gradient(
       circle at 50% -20%,
-      rgb(124 58 237 / 0.13),
-      transparent 35%
+      rgb(139 92 246 / 0.18),
+      transparent 40%
     ),
-    #09090d;
+    #07050e;
 }
 .vexora-editor button,
 .vexora-editor a,
@@ -90,37 +115,37 @@ a {
     opacity 180ms ease;
 }
 .vexora-editor :focus-visible {
-  outline: 2px solid #a78bfa;
+  outline: 2px solid #c084fc;
   outline-offset: 2px;
 }
 .vexora-editor-header {
   border-bottom: 1px solid var(--editor-border);
   background: linear-gradient(
     180deg,
-    rgb(18 18 25 / 0.98),
-    rgb(12 12 18 / 0.96)
+    rgb(18 13 32 / 0.98),
+    rgb(10 7 20 / 0.96)
   );
-  box-shadow: 0 14px 40px rgb(0 0 0 / 0.2);
+  box-shadow: 0 14px 40px rgb(0 0 0 / 0.4);
   backdrop-filter: blur(20px);
 }
 .vexora-device-switcher,
 .vexora-canvas-hint {
   border: 1px solid rgb(255 255 255 / 0.1);
   border-radius: 16px;
-  background: rgb(18 18 25 / 0.88);
+  background: rgb(18 13 32 / 0.88);
   box-shadow:
-    0 18px 50px rgb(0 0 0 / 0.32),
-    inset 0 1px rgb(255 255 255 / 0.05);
+    0 18px 50px rgb(0 0 0 / 0.4),
+    inset 0 1px rgb(255 255 255 / 0.08);
   backdrop-filter: blur(18px);
 }
 .vexora-editor-sidebar {
   border-color: var(--editor-border);
   background: linear-gradient(
     180deg,
-    rgb(19 19 27 / 0.98),
-    rgb(13 13 20 / 0.98)
+    rgb(17 12 30 / 0.98),
+    rgb(10 7 20 / 0.98)
   );
-  box-shadow: 0 20px 60px rgb(0 0 0 / 0.18);
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.3);
 }
 .vexora-editor-sidebar:first-of-type {
   border-right: 1px solid var(--editor-border);
@@ -130,23 +155,23 @@ a {
 }
 .vexora-workspace {
   background:
-    radial-gradient(circle at 50% 8%, rgb(124 58 237 / 0.1), transparent 30%),
-    linear-gradient(145deg, #15151d, #0f0f15 60%, #13131b);
+    radial-gradient(circle at 50% 8%, rgb(139 92 246 / 0.15), transparent 35%),
+    linear-gradient(145deg, #110c22, #07050e 60%, #0d091a);
 }
 .vexora-workspace-grid {
-  opacity: 0.22;
+  opacity: 0.25;
   background-image:
-    linear-gradient(rgb(255 255 255 / 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.025) 1px, transparent 1px);
+    linear-gradient(rgb(255 255 255 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.03) 1px, transparent 1px);
   background-size: 24px 24px;
   mask-image: radial-gradient(circle at center, black, transparent 82%);
 }
 .vexora-canvas {
-  border: 1px solid rgb(255 255 255 / 0.14);
-  border-radius: 6px;
+  border: 1px solid rgb(167 139 250 / 0.2);
+  border-radius: 8px;
   box-shadow:
-    0 42px 110px rgb(0 0 0 / 0.56),
-    0 0 0 1px rgb(0 0 0 / 0.5);
+    0 42px 110px rgb(0 0 0 / 0.65),
+    0 0 0 1px rgb(139 92 246 / 0.15);
 }
 .font-choice {
   display: flex;
@@ -159,18 +184,18 @@ a {
   color: rgb(255 255 255 / 0.72);
 }
 .font-choice:hover {
-  border-color: rgb(167 139 250 / 0.45);
-  background: rgb(139 92 246 / 0.08);
+  border-color: rgb(167 139 250 / 0.5);
+  background: rgb(139 92 246 / 0.12);
   color: white;
 }
 .font-choice-active {
-  border-color: rgb(167 139 250 / 0.7);
+  border-color: rgb(192 132 252 / 0.8);
   background: linear-gradient(
     145deg,
-    rgb(139 92 246 / 0.2),
-    rgb(99 102 241 / 0.08)
+    rgb(139 92 246 / 0.28),
+    rgb(192 132 252 / 0.12)
   );
-  box-shadow: inset 0 0 0 1px rgb(167 139 250 / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(192 132 252 / 0.2);
   color: white;
 }
 
@@ -186,14 +211,14 @@ a {
     box-shadow 160ms ease;
 }
 .vexora-editable-section:hover::after {
-  border-color: rgb(167 139 250 / 0.5);
-  box-shadow: inset 0 0 0 1px rgb(167 139 250 / 0.1);
+  border-color: rgb(192 132 252 / 0.6);
+  box-shadow: inset 0 0 0 1px rgb(192 132 252 / 0.15);
 }
 .vexora-section-selected::after {
-  border: 2px solid #a78bfa;
+  border: 2px solid #c084fc;
   box-shadow:
     inset 0 0 0 1px rgb(255 255 255 / 0.2),
-    inset 0 0 38px rgb(124 58 237 / 0.08);
+    inset 0 0 38px rgb(139 92 246 / 0.15);
 }
 .vexora-section-drop-target::before {
   position: absolute;
@@ -203,8 +228,8 @@ a {
   left: 8px;
   height: 4px;
   border-radius: 99px;
-  background: #a78bfa;
-  box-shadow: 0 0 22px rgb(167 139 250 / 0.8);
+  background: #c084fc;
+  box-shadow: 0 0 22px rgb(192 132 252 / 0.9);
   content: "";
 }
 .vexora-section-toolbar {
@@ -217,11 +242,11 @@ a {
   gap: 2px;
   min-height: 38px;
   padding: 3px;
-  border: 1px solid rgb(255 255 255 / 0.14);
+  border: 1px solid rgb(167 139 250 / 0.3);
   border-radius: 13px;
-  background: rgb(18 18 25 / 0.94);
+  background: rgb(15 10 28 / 0.95);
   color: white;
-  box-shadow: 0 14px 34px rgb(0 0 0 / 0.45);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 0.6);
   backdrop-filter: blur(16px);
   transform: translateX(-50%);
 }
@@ -233,10 +258,10 @@ a {
   justify-content: center;
   gap: 6px;
   border-radius: 9px;
-  color: rgb(255 255 255 / 0.62);
+  color: rgb(255 255 255 / 0.7);
 }
 .vexora-section-tool:hover {
-  background: rgb(255 255 255 / 0.1);
+  background: rgb(139 92 246 / 0.25);
   color: white;
 }
 .vexora-section-tool:disabled {
@@ -258,7 +283,7 @@ a {
   padding-inline: 8px;
   border-left: 1px solid rgb(255 255 255 / 0.1);
   border-right: 1px solid rgb(255 255 255 / 0.1);
-  color: rgb(255 255 255 / 0.38);
+  color: rgb(192 132 252 / 0.6);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -266,7 +291,7 @@ a {
   text-transform: uppercase;
 }
 .vexora-delete-tool:hover {
-  background: rgb(244 63 94 / 0.14);
+  background: rgb(244 63 94 / 0.18);
   color: #fda4af;
 }
 .vexora-inline-edit {
@@ -282,13 +307,13 @@ a {
     box-shadow 160ms ease;
 }
 .vexora-inline-edit:hover {
-  outline-color: rgb(167 139 250 / 0.65);
-  background: rgb(167 139 250 / 0.06);
+  outline-color: rgb(192 132 252 / 0.75);
+  background: rgb(139 92 246 / 0.08);
 }
 .vexora-inline-edit:focus {
-  outline: 2px solid #a78bfa;
-  background: rgb(10 10 14 / 0.22);
-  box-shadow: 0 0 0 5px rgb(139 92 246 / 0.12);
+  outline: 2px solid #c084fc;
+  background: rgb(10 7 20 / 0.3);
+  box-shadow: 0 0 0 5px rgb(139 92 246 / 0.18);
 }
 
 .vexora-site-root {
@@ -449,3 +474,4 @@ a {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
